@@ -47,8 +47,10 @@ namespace Parser837
                         }
                         Console.WriteLine("Processing file " + fi.Name + " total records: " + encounterCount.ToString());
                         sbLog.AppendLine("Processing file " + fi.Name + " total records: " + encounterCount.ToString());
+
                         submittedfile = new SubmissionLog();
                         submittedfile.FileName = fi.Name;
+                        submittedfile.FilePath = sourceFolder;
                         submittedfile.EncounterCount = encounterCount;
                         submittedfile.CreatedDate = DateTime.Now;
                         //isa
@@ -57,6 +59,7 @@ namespace Parser837
                         submittedfile.ReceiverID = temp1[8];
                         submittedfile.InterchangeControlNumber = temp1[13];
                         submittedfile.ProductionFlag = temp1[15];
+                        char elementDelimiter = Char.Parse(temp1[16]);
                         //gs
                         temp1 = s837Lines[1].Split('*');
                         submittedfile.InterchangeDate = temp1[4];
@@ -92,12 +95,13 @@ namespace Parser837
 
                         foreach (string s837Line in s837Lines)
                         {
-                            Process837.Process837Line(s837Line, ref submittedfile, ref LoopName, ref saveFlag, ref claim, ref claims);
+                            Process837.Process837Line(s837Line, ref submittedfile, ref LoopName, ref saveFlag, ref claim, ref claims, ref elementDelimiter);
                         }
                         Process837.InitilizeClaim("Claim", ref claim, ref claims, ref submittedfile);
                         SHRUtil.SaveClaims(ref claims);
                         claims.Clear();
                         claim = null;
+                        context.SaveChanges();
                     }
                     if (File.Exists(Path.Combine(archiveFolder, fi.Name))) File.Delete(Path.Combine(archiveFolder, fi.Name));
                     fi.MoveTo(Path.Combine(archiveFolder, fi.Name));

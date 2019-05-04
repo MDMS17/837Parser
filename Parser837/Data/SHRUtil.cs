@@ -17,7 +17,6 @@ namespace Parser837
                 context.ClaimCRCs.AddRange(claims.SelectMany(x => x.CRCs).ToList());
                 context.ClaimHIs.AddRange(claims.SelectMany(x => x.His).ToList());
                 context.ClaimK3s.AddRange(claims.SelectMany(x => x.K3s).ToList());
-                context.ClaimLineAuths.AddRange(claims.SelectMany(x => x.Auths).ToList());
                 context.ClaimLineFRMs.AddRange(claims.SelectMany(x => x.FRMs).ToList());
                 context.ClaimLineLQs.AddRange(claims.SelectMany(x => x.LQs).ToList());
                 context.ClaimLineMEAs.AddRange(claims.SelectMany(x => x.Meas).ToList());
@@ -30,6 +29,18 @@ namespace Parser837
                 context.ClaimSecondaryIdentifications.AddRange(claims.SelectMany(x => x.SecondaryIdentifications).ToList());
                 context.ProviderContacts.AddRange(claims.SelectMany(x => x.ProviderContacts).ToList());
                 context.ServiceLines.AddRange(claims.SelectMany(x => x.Lines).ToList());
+                context.ToothStatus.AddRange(claims.SelectMany(x => x.ToothStatuses).ToList());
+                context.SaveChanges();
+            }
+        }
+
+        public static void SaveLines(ref List<ServiceLine> claimlines, ref List<ClaimLineSVD> claimlinesvds, ref List<ClaimCAS> claimcases)
+        {
+            using (var context = new SHRContext())
+            {
+                context.ServiceLines.AddRange(claimlines);
+                context.ClaimLineSVDs.AddRange(claimlinesvds);
+                context.ClaimCAS.AddRange(claimcases);
                 context.SaveChanges();
             }
         }

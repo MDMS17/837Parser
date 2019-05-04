@@ -16,7 +16,10 @@ namespace Parser837
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             modelBuilder.HasDefaultSchema("Sub_History");
+            modelBuilder.Entity<ClaimK3>().ToTable("ClaimK3s");
             modelBuilder.Entity<ClaimTempHost>().ToTable("ClaimTempHost");
+            modelBuilder.Entity<Hipaa_XML>().ToTable("Hipaa_XML");
+            modelBuilder.Entity<ToothStatus>().ToTable("ToothStatus");
         }
         public virtual DbSet<ClaimTempHost> ClaimTempHost { get; set; }
         public virtual DbSet<ClaimHeader> ClaimHeaders { get; set; }
@@ -26,7 +29,6 @@ namespace Parser837
         public virtual DbSet<ClaimCRC> ClaimCRCs { get; set; }
         public virtual DbSet<ClaimHI> ClaimHIs { get; set; }
         public virtual DbSet<ClaimK3> ClaimK3s { get; set; }
-        public virtual DbSet<ClaimLineAuth> ClaimLineAuths { get; set; }
         public virtual DbSet<ClaimLineFRM> ClaimLineFRMs { get; set; }
         public virtual DbSet<ClaimLineLQ> ClaimLineLQs { get; set; }
         public virtual DbSet<ClaimLineMEA> ClaimLineMEAs { get; set; }
@@ -38,6 +40,8 @@ namespace Parser837
         public virtual DbSet<ClaimPatient> ClaimPatients { get; set; }
         public virtual DbSet<ClaimSecondaryIdentification> ClaimSecondaryIdentifications { get; set; }
         public virtual DbSet<ProviderContact> ProviderContacts { get; set; }
+        public virtual DbSet<Hipaa_XML> Hipaa_XML { get; set; }
+        public virtual DbSet<ToothStatus> ToothStatus { get; set; }
 
     }
 }

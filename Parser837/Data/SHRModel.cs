@@ -7,10 +7,34 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Parser837
 {
+    public class Hipaa_XML
+    {
+        [Key]
+        public int ID { get; set; }
+        public string ClaimType { get; set; }
+        public string ClaimID { get; set; }
+        public string EncounterId { get; set; }
+        public string ClaimHipaaXML { get; set; }
+    }
     public class ClaimTempHost
     {
         [Key]
         public string ClaimID { get; set; }
+    }
+    public class ToothStatus
+    {
+        [Key]
+        public long ID { get; set; }
+        public int FileID { get; set; }
+        public string LoopName { get; set; }
+        public string ClaimID { get; set; }
+        public string ServiceLineNumber { get; set; }
+        public string ToothNumber { get; set; }
+        public string StatusCode { get; set; }
+        public string SurfaceCode2 { get; set; }
+        public string SurfaceCode3 { get; set; }
+        public string SurfaceCode4 { get; set; }
+        public string SurfaceCode5 { get; set; }
     }
     public class ClaimProvider
     {
@@ -103,6 +127,13 @@ namespace Parser837
         public string AssumedEndDate { get; set; }
         public string FirstContactDate { get; set; }
         public string RepricerReceivedDate { get; set; }
+        //from dental specific dtps
+        public string AppliancePlacementDate { get; set; } //439
+        public string ServiceFromDate { get; set; }  //472 header level
+        public string ServiceToDate { get; set; }    //472 header level
+        //from dental DN1
+        public string OrthoMonthTotal { get; set; }
+        public string OrthoMonthRemaining { get; set; }
         //from PWK-2300, in separate table to hold up to 10 repeats
         //from CN1-2300
         public string ContractTypeCode { get; set; }
@@ -113,21 +144,6 @@ namespace Parser837
         public string ContractVersionIdentifier { get; set; }
         //from AMT-2300
         public string PatientPaidAmount { get; set; }
-        //from REF-2300
-        public string ServiceAuthorizationExceptionCode { get; set; }
-        public string MedicareSection4081Indicator { get; set; }
-        public string MammographyCertificationNumber { get; set; }
-        public string ReferralNumber { get; set; }
-        public string PriorAuthorizationNumber { get; set; }
-        public string PayerClaimControlNumber { get; set; }
-        public string ClinicalLabNumber { get; set; }
-        public string RepricedClaimNumber { get; set; }
-        public string AdjustedClaimNumber { get; set; }
-        public string InvestigationalID { get; set; }
-        public string ValueAddedNetworkTraceNumber { get; set; }
-        public string MedicalRecordNumber { get; set; }
-        public string DemonstrationID { get; set; }
-        public string CarePlanOversightNumber { get; set; }
         //from K3-2300, in separate table to hold up to 10 repeats
         //from NTE-2300, go to separate table
         //from CR1-2300
@@ -196,10 +212,6 @@ namespace Parser837
         //from DMG-2010CA
         public string PatientBirthDate { get; set; }
         public string PatientGender { get; set; }
-        //from REF-2010CA
-        public string PatientClaimNumber { get; set; }
-        public string PatientSSN { get; set; }
-        public string PatientMemberID { get; set; }
         //from PER-2010CA
         public string PatientContactName { get; set; }
         public string PatientContactPhone { get; set; }
@@ -314,9 +326,6 @@ namespace Parser837
         //from DMG-2010BA
         public string SubscriberBirthDate { get; set; }
         public string SubscriberGender { get; set; }
-        //from REF-2010BA
-        public string SubscriberSSN { get; set; }//social security number
-        public string SubscriberClaimNumber { get; set; }//property cacualty claim number
         //from PER-2010BA
         public string SubscriberContactName { get; set; }
         public string SubscriberContactPhone { get; set; }
@@ -395,17 +404,6 @@ namespace Parser837
         public string MeasurementQualifier { get; set; }
         public string TestResult { get; set; }
     }
-    public class ClaimLineAuth
-    {
-        [Key]
-        public long ID { get; set; }
-        public int FileID { get; set; }
-        public string ClaimID { get; set; }
-        public string ServiceLineNumber { get; set; }
-        public string ReferenceQualifier { get; set; }
-        public string ReferralNumber { get; set; }
-        public string OtherPayerPrimaryIdentifier { get; set; }
-    }
     public class ClaimLineSVD
     {
         [Key]
@@ -426,6 +424,10 @@ namespace Parser837
         public string PaidServiceUnitCount { get; set; }
         public string BundledLineNumber { get; set; }
         public string ServiceLineRevenueCode { get; set; }
+        //from DTP-2430
+        public string AdjudicationDate { get; set; }
+        //from AMT-2430
+        public string ReaminingPatientLiabilityAmount { get; set; }
     }
     public class ClaimLineLQ
     {
@@ -456,7 +458,7 @@ namespace Parser837
     public class ServiceLine
     {
         [Key]
-        public int ID { get; set; }
+        public long ID { get; set; }
         public int FileID { get; set; }
         public string ClaimID { get; set; }
         public string ServiceLineNumber { get; set; }
@@ -523,14 +525,6 @@ namespace Parser837
         public string ContractCode { get; set; }
         public string TermsDiscountPercentage { get; set; }
         public string ContractVersionIdentifier { get; set; }
-        //from REF-2400
-        public string RepricedLineItemReferenceNumber { get; set; }
-        public string AdjustedRepricedLineItemReferenceNumber { get; set; }
-        public string LineItemControlNumber { get; set; }
-        public string MammographyCertificationNumber { get; set; }
-        public string ClinicalLabNumber { get; set; }
-        public string ReferringCLIANumber { get; set; }
-        public string ImmunizationBatchNumber { get; set; }
         //from AMT-2400
         public string SalesTaxAmount { get; set; }
         public string PostageClaimedAmount { get; set; }
@@ -560,19 +554,27 @@ namespace Parser837
         //from CTP-2410
         public string DrugQuantity { get; set; }
         public string DrugQualifier { get; set; }
-        //from REF-2410
-        public string LinkSequenceNumber { get; set; }
-        public string PharmacyPrescriptionNumber { get; set; }
-        //from DTP-2430
-        public string AdjudicationDate { get; set; }
-        //from AMT-2430
-        public string ReaminingPatientLiabilityAmount { get; set; }
         //from LQ-2440, in separate table
         //from institutional sv2
         public string RevenueCode { get; set; }
         public string LineItemDeniedChargeAmount { get; set; }
         //from institutional 2400-AMT
+        public string ServiceTaxAmount { get; set; }
         public string FacilityTaxAmount { get; set; }
+
+        //from dental line DTPs
+        public string PriorPlacementDate { get; set; }//441
+        public string AppliancePlacementDate { get; set; }//452
+        public string ReplacementDate { get; set; }//446
+        public string TreatmentStartDate { get; set; }//196
+        public string TreatmentCompletionDate { get; set; }//198
+        //from dental SV3
+        public string OralCavityDesignationCode1 { get; set; }
+        public string OralCavityDesignationCode2 { get; set; }
+        public string OralCavityDesignationCode3 { get; set; }
+        public string OralCavityDesignationCode4 { get; set; }
+        public string OralCavityDesignationCode5 { get; set; }
+        public string ProsthesisCrownOrInlayCode { get; set; }
 
     }
     public class SubmissionLog
@@ -630,10 +632,10 @@ namespace Parser837
         public List<ClaimPatient> Patients { get; set; }
         public List<ClaimCAS> Cases { get; set; }
         public List<ClaimLineMEA> Meas { get; set; }
-        public List<ClaimLineAuth> Auths { get; set; }
         public List<ClaimLineSVD> SVDs { get; set; }
         public List<ClaimLineLQ> LQs { get; set; }
         public List<ClaimLineFRM> FRMs { get; set; }
+        public List<ToothStatus> ToothStatuses { get; set; }
         public Claim()
         {
             Header = new ClaimHeader();
@@ -650,10 +652,10 @@ namespace Parser837
             Patients = new List<ClaimPatient>();
             Cases = new List<ClaimCAS>();
             Meas = new List<ClaimLineMEA>();
-            Auths = new List<ClaimLineAuth>();
             SVDs = new List<ClaimLineSVD>();
             LQs = new List<ClaimLineLQ>();
             FRMs = new List<ClaimLineFRM>();
+            ToothStatuses = new List<ToothStatus>();
         }
     }
 }

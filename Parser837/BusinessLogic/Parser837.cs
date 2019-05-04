@@ -8,14 +8,13 @@ namespace Parser837
 {
     public class Process837
     {
-        public static void Process837Line(string s837Line, ref SubmissionLog submittedFile, ref string LoopName, ref bool saveFlag, ref Claim claim, ref List<Claim> claims)
+        public static void Process837Line(string s837Line, ref SubmissionLog submittedFile, ref string LoopName, ref bool saveFlag, ref Claim claim, ref List<Claim> claims, ref char elementDelimiter)
         {
             ServiceLine line;
             ClaimCAS cas;
             ClaimCRC crc;
             ClaimHI hi;
             ClaimK3 k3;
-            ClaimLineAuth auth;
             ClaimLineFRM frm;
             ClaimLineLQ lq;
             ClaimLineMEA mea;
@@ -27,7 +26,9 @@ namespace Parser837
             ClaimSBR sbr;
             ClaimSecondaryIdentification secondaryIdentification;
             ProviderContact providercontact;
+            ToothStatus toothStatus;
             string[] temparray;
+            string[] temparray2;
 
             string[] segments = s837Line.Split('*');
             switch (segments[0])
@@ -317,7 +318,7 @@ namespace Parser837
                                     provider.RepeatSequence = claim.Subscribers.Last().SubscriberSequenceNumber;
                                     claim.Providers.Add(provider);
                                 }
-                                else if (submittedFile.FileType == "005010X222A2")
+                                else if (submittedFile.FileType == "005010X223A2")
                                 {
                                     //institutional other payer billing provider
                                     LoopName = "2330I";
@@ -326,6 +327,19 @@ namespace Parser837
                                     provider.FileID = submittedFile.FileID;
                                     provider.ServiceLineNumber = "0";
                                     provider.LoopName = "2330I";
+                                    provider.ProviderQualifier = "85";
+                                    provider.RepeatSequence = claim.Subscribers.Last().SubscriberSequenceNumber;
+                                    claim.Providers.Add(provider);
+                                }
+                                else if (submittedFile.FileType == "005010X224A2")
+                                {
+                                    //dental other payer billing provider
+                                    LoopName = "2330F";
+                                    provider = new ClaimProvider();
+                                    provider.ClaimID = claim.Header.ClaimID;
+                                    provider.FileID = submittedFile.FileID;
+                                    provider.ServiceLineNumber = "0";
+                                    provider.LoopName = "2330F";
                                     provider.ProviderQualifier = "85";
                                     provider.RepeatSequence = claim.Subscribers.Last().SubscriberSequenceNumber;
                                     claim.Providers.Add(provider);
@@ -371,11 +385,11 @@ namespace Parser837
                             {
                                 LoopName = "2330A";
                                 claim.Subscribers.Last().LastName = segments[3];
-                                claim.Subscribers.Last().FirstName = segments[4];
-                                claim.Subscribers.Last().MidddleName = segments[5];
-                                claim.Subscribers.Last().NameSuffix = segments[7];
-                                claim.Subscribers.Last().IDQualifier = segments[8];
-                                claim.Subscribers.Last().IDCode = segments[9];
+                                if (segments.Length > 4) claim.Subscribers.Last().FirstName = segments[4];
+                                if (segments.Length > 5) claim.Subscribers.Last().MidddleName = segments[5];
+                                if (segments.Length > 7) claim.Subscribers.Last().NameSuffix = segments[7];
+                                if (segments.Length > 8) claim.Subscribers.Last().IDQualifier = segments[8];
+                                if (segments.Length > 9) claim.Subscribers.Last().IDCode = segments[9];
                             }
                             break;
                         case "PR":
@@ -407,6 +421,7 @@ namespace Parser837
                                 provider.ProviderLastName = segments[3];
                                 provider.ProviderIDQualifier = segments[8];
                                 provider.ProviderID = segments[9];
+                                provider.RepeatSequence = claim.Subscribers.Last().SubscriberSequenceNumber;
                                 claim.Providers.Add(provider);
                             }
                             break;
@@ -423,7 +438,7 @@ namespace Parser837
                         case "DN":
                             if (string.Compare(LoopName, "2311") == -1)
                             {
-                                if (submittedFile.FileType == "005010X222A1")
+                                if (submittedFile.FileType == "005010X222A1" || submittedFile.FileType == "005010X224A2")
                                 {
                                     //professional ReferringProvider
                                     LoopName = "2310A";
@@ -442,7 +457,7 @@ namespace Parser837
                                     provider.RepeatSequence = (claim.Providers.Count + 1).ToString();
                                     claim.Providers.Add(provider);
                                 }
-                                else if (submittedFile.FileType == "005010X222A2")
+                                else if (submittedFile.FileType == "005010X2232A2")
                                 {
                                     //institutional ReferringProvider
                                     LoopName = "2310F";
@@ -463,7 +478,7 @@ namespace Parser837
                             }
                             else if (string.Compare(LoopName, "2331") == -1)
                             {
-                                if (submittedFile.FileType == "005010X222A1")
+                                if (submittedFile.FileType == "005010X222A1" || submittedFile.FileType == "005010X224A2")
                                 {
                                     //professional other payer referring provider
                                     LoopName = "2330C";
@@ -473,10 +488,10 @@ namespace Parser837
                                     provider.ServiceLineNumber = "0";
                                     provider.LoopName = "2330C";
                                     provider.ProviderQualifier = "DN";
-                                    provider.RepeatSequence = (claim.Providers.Count + 1).ToString();
+                                    provider.RepeatSequence = claim.Subscribers.Last().SubscriberSequenceNumber + ":" + (claim.Providers.Count + 1).ToString();
                                     claim.Providers.Add(provider);
                                 }
-                                else if (submittedFile.FileType == "005010X222A2")
+                                else if (submittedFile.FileType == "005010X223A2")
                                 {
                                     //institutional other payer referring provider
                                     LoopName = "2330H";
@@ -486,7 +501,7 @@ namespace Parser837
                                     provider.ServiceLineNumber = "0";
                                     provider.LoopName = "2330H";
                                     provider.ProviderQualifier = "DN";
-                                    provider.RepeatSequence = (claim.Providers.Count + 1).ToString();
+                                    provider.RepeatSequence = claim.Subscribers.Last().SubscriberSequenceNumber + ":" + (claim.Providers.Count + 1).ToString();
                                     claim.Providers.Add(provider);
                                 }
                             }
@@ -510,7 +525,7 @@ namespace Parser837
                                     if (segments.Length > 9) provider.ProviderID = segments[9];
                                     claim.Providers.Add(provider);
                                 }
-                                else if (submittedFile.FileType == "005010X222A2")
+                                else if (submittedFile.FileType == "005010X223A2")
                                 {
                                     //institutional line level referring provider
                                     LoopName = "2420D";
@@ -571,7 +586,7 @@ namespace Parser837
                             //rendering provider
                             if (string.Compare(LoopName, "2311") == -1)
                             {
-                                if (submittedFile.FileType == "005010X222A1")
+                                if (submittedFile.FileType == "005010X222A1" || submittedFile.FileType == "005010X224A2")
                                 {
                                     //professional RenderingProvider
                                     LoopName = "2310B";
@@ -589,7 +604,7 @@ namespace Parser837
                                     if (segments.Length > 9) provider.ProviderID = segments[9];
                                     claim.Providers.Add(provider);
                                 }
-                                else if (submittedFile.FileType == "005010X222A2")
+                                else if (submittedFile.FileType == "005010X223A2")
                                 {
                                     //institutional rendering provider
                                     LoopName = "2310D";
@@ -611,7 +626,7 @@ namespace Parser837
                             }
                             else if (string.Compare(LoopName, "2331") == -1)
                             {
-                                if (submittedFile.FileType == "005010X222A1")
+                                if (submittedFile.FileType == "005010X222A1" || submittedFile.FileType == "005010X224A2")
                                 {
                                     //professional other payer rendering provider
                                     LoopName = "2330D";
@@ -624,7 +639,7 @@ namespace Parser837
                                     provider.RepeatSequence = claim.Subscribers.Last().SubscriberSequenceNumber;
                                     claim.Providers.Add(provider);
                                 }
-                                else if (submittedFile.FileType == "005010X222A2")
+                                else if (submittedFile.FileType == "005010X223A2")
                                 {
                                     //institutional other payer rendering provider
                                     LoopName = "2330G";
@@ -640,7 +655,7 @@ namespace Parser837
                             }
                             else if (string.Compare(LoopName, "2421") == -1)
                             {
-                                if (submittedFile.FileType == "005010X222A1")
+                                if (submittedFile.FileType == "005010X222A1" || submittedFile.FileType == "005010X224A2")
                                 {
                                     //professional line level rendering provider
                                     LoopName = "2420A";
@@ -658,7 +673,7 @@ namespace Parser837
                                     if (segments.Length > 9) provider.ProviderID = segments[9];
                                     claim.Providers.Add(provider);
                                 }
-                                else if (submittedFile.FileType == "005010X222A2")
+                                else if (submittedFile.FileType == "005010X223A2")
                                 {
                                     //institutional line level rendering provider
                                     LoopName = "2420C";
@@ -682,7 +697,7 @@ namespace Parser837
                             //service facility
                             if (string.Compare(LoopName, "2311") == -1)
                             {
-                                if (submittedFile.FileType == "005010X222A1")
+                                if (submittedFile.FileType == "005010X222A1" || submittedFile.FileType == "005010X224A2")
                                 {
                                     //professional ServiceFacility
                                     LoopName = "2310C";
@@ -700,7 +715,7 @@ namespace Parser837
                                     if (segments.Length > 9) provider.ProviderID = segments[9];
                                     claim.Providers.Add(provider);
                                 }
-                                else if (submittedFile.FileType == "005010X222A2")
+                                else if (submittedFile.FileType == "005010X223A2")
                                 {
                                     //institutional ServiceFacility
                                     LoopName = "2310E";
@@ -734,7 +749,7 @@ namespace Parser837
                                     provider.RepeatSequence = claim.Subscribers.Last().SubscriberSequenceNumber;
                                     claim.Providers.Add(provider);
                                 }
-                                else if (submittedFile.FileType == "005010X222A2")
+                                else if (submittedFile.FileType == "005010X223A2")
                                 {
                                     //institutional other payer service facility
                                     LoopName = "2330F";
@@ -743,6 +758,19 @@ namespace Parser837
                                     provider.FileID = submittedFile.FileID;
                                     provider.ServiceLineNumber = "0";
                                     provider.LoopName = "2330F";
+                                    provider.ProviderQualifier = "77";
+                                    provider.RepeatSequence = claim.Subscribers.Last().SubscriberSequenceNumber;
+                                    claim.Providers.Add(provider);
+                                }
+                                else if (submittedFile.FileType == "005010X224A2")
+                                {
+                                    //dental other payer service facility
+                                    LoopName = "2330G";
+                                    provider = new ClaimProvider();
+                                    provider.ClaimID = claim.Header.ClaimID;
+                                    provider.FileID = submittedFile.FileID;
+                                    provider.ServiceLineNumber = "0";
+                                    provider.LoopName = "2330G";
                                     provider.ProviderQualifier = "77";
                                     provider.RepeatSequence = claim.Subscribers.Last().SubscriberSequenceNumber;
                                     claim.Providers.Add(provider);
@@ -767,50 +795,111 @@ namespace Parser837
                             //supervising provider
                             if (string.Compare(LoopName, "2311") == -1)
                             {
-                                LoopName = "2310D";
-                                //"SupervisingProvider";
-                                provider = new ClaimProvider();
-                                provider.ClaimID = claim.Header.ClaimID;
-                                provider.FileID = submittedFile.FileID;
-                                provider.ServiceLineNumber = "0";
-                                provider.LoopName = "2310D";
-                                provider.ProviderQualifier = "DQ";
-                                provider.ProviderLastName = segments[3];
-                                if (segments.Length > 4) provider.ProviderFirstName = segments[4];
-                                if (segments.Length > 5) provider.ProviderMiddle = segments[5];
-                                if (segments.Length > 7) provider.ProviderSuffix = segments[7];
-                                if (segments.Length > 8) provider.ProviderIDQualifier = segments[8];
-                                if (segments.Length > 9) provider.ProviderID = segments[9];
-                                claim.Providers.Add(provider);
+                                if (submittedFile.FileType == "005010X222A1")
+                                {
+                                    // professional SupervisingProvider
+                                    LoopName = "2310D";
+                                    provider = new ClaimProvider();
+                                    provider.ClaimID = claim.Header.ClaimID;
+                                    provider.FileID = submittedFile.FileID;
+                                    provider.ServiceLineNumber = "0";
+                                    provider.LoopName = "2310D";
+                                    provider.ProviderQualifier = "DQ";
+                                    provider.ProviderLastName = segments[3];
+                                    if (segments.Length > 4) provider.ProviderFirstName = segments[4];
+                                    if (segments.Length > 5) provider.ProviderMiddle = segments[5];
+                                    if (segments.Length > 7) provider.ProviderSuffix = segments[7];
+                                    if (segments.Length > 8) provider.ProviderIDQualifier = segments[8];
+                                    if (segments.Length > 9) provider.ProviderID = segments[9];
+                                    claim.Providers.Add(provider);
+                                }
+                                else if (submittedFile.FileType == "005010X224A2")
+                                {
+                                    // dental SupervisingProvider
+                                    LoopName = "2310E";
+                                    provider = new ClaimProvider();
+                                    provider.ClaimID = claim.Header.ClaimID;
+                                    provider.FileID = submittedFile.FileID;
+                                    provider.ServiceLineNumber = "0";
+                                    provider.LoopName = "2310E";
+                                    provider.ProviderQualifier = "DQ";
+                                    provider.ProviderLastName = segments[3];
+                                    if (segments.Length > 4) provider.ProviderFirstName = segments[4];
+                                    if (segments.Length > 5) provider.ProviderMiddle = segments[5];
+                                    if (segments.Length > 7) provider.ProviderSuffix = segments[7];
+                                    if (segments.Length > 8) provider.ProviderIDQualifier = segments[8];
+                                    if (segments.Length > 9) provider.ProviderID = segments[9];
+                                    claim.Providers.Add(provider);
+                                }
+
                             }
                             else if (string.Compare(LoopName, "2331") == -1)
                             {
-                                LoopName = "2330F";
-                                provider = new ClaimProvider();
-                                provider.ClaimID = claim.Header.ClaimID;
-                                provider.FileID = submittedFile.FileID;
-                                provider.ServiceLineNumber = "0";
-                                provider.LoopName = "2330F";
-                                provider.ProviderQualifier = "DQ";
-                                provider.RepeatSequence = claim.Subscribers.Last().SubscriberSequenceNumber;
-                                claim.Providers.Add(provider);
+                                if (submittedFile.FileType == "005010X222A1")
+                                {
+                                    //profesisonal supervising
+                                    LoopName = "2330F";
+                                    provider = new ClaimProvider();
+                                    provider.ClaimID = claim.Header.ClaimID;
+                                    provider.FileID = submittedFile.FileID;
+                                    provider.ServiceLineNumber = "0";
+                                    provider.LoopName = "2330F";
+                                    provider.ProviderQualifier = "DQ";
+                                    provider.RepeatSequence = claim.Subscribers.Last().SubscriberSequenceNumber;
+                                    claim.Providers.Add(provider);
+                                }
+                                else if (submittedFile.FileType == "005010X224A2")
+                                {
+                                    //dental supervising
+                                    LoopName = "2330E";
+                                    provider = new ClaimProvider();
+                                    provider.ClaimID = claim.Header.ClaimID;
+                                    provider.FileID = submittedFile.FileID;
+                                    provider.ServiceLineNumber = "0";
+                                    provider.LoopName = "2330E";
+                                    provider.ProviderQualifier = "DQ";
+                                    provider.RepeatSequence = claim.Subscribers.Last().SubscriberSequenceNumber;
+                                    claim.Providers.Add(provider);
+                                }
                             }
                             else if (string.Compare(LoopName, "2421") == -1)
                             {
-                                LoopName = "2420D";
-                                provider = new ClaimProvider();
-                                provider.ClaimID = claim.Header.ClaimID;
-                                provider.FileID = submittedFile.FileID;
-                                provider.ServiceLineNumber = claim.Lines.Last().ServiceLineNumber;
-                                provider.LoopName = "2420D";
-                                provider.ProviderQualifier = "DQ";
-                                provider.ProviderLastName = segments[3];
-                                if (segments.Length > 4) provider.ProviderFirstName = segments[4];
-                                if (segments.Length > 5) provider.ProviderMiddle = segments[5];
-                                if (segments.Length > 7) provider.ProviderSuffix = segments[7];
-                                if (segments.Length > 8) provider.ProviderIDQualifier = segments[8];
-                                if (segments.Length > 9) provider.ProviderID = segments[9];
-                                claim.Providers.Add(provider);
+                                if (submittedFile.FileType == "005010X222A1")
+                                {
+                                    //profesisonal line level supervising
+                                    LoopName = "2420D";
+                                    provider = new ClaimProvider();
+                                    provider.ClaimID = claim.Header.ClaimID;
+                                    provider.FileID = submittedFile.FileID;
+                                    provider.ServiceLineNumber = claim.Lines.Last().ServiceLineNumber;
+                                    provider.LoopName = "2420D";
+                                    provider.ProviderQualifier = "DQ";
+                                    provider.ProviderLastName = segments[3];
+                                    if (segments.Length > 4) provider.ProviderFirstName = segments[4];
+                                    if (segments.Length > 5) provider.ProviderMiddle = segments[5];
+                                    if (segments.Length > 7) provider.ProviderSuffix = segments[7];
+                                    if (segments.Length > 8) provider.ProviderIDQualifier = segments[8];
+                                    if (segments.Length > 9) provider.ProviderID = segments[9];
+                                    claim.Providers.Add(provider);
+                                }
+                                else if (submittedFile.FileType == "005010X224A2")
+                                {
+                                    //dental line level supervising
+                                    LoopName = "2420C";
+                                    provider = new ClaimProvider();
+                                    provider.ClaimID = claim.Header.ClaimID;
+                                    provider.FileID = submittedFile.FileID;
+                                    provider.ServiceLineNumber = claim.Lines.Last().ServiceLineNumber;
+                                    provider.LoopName = "2420C";
+                                    provider.ProviderQualifier = "DQ";
+                                    provider.ProviderLastName = segments[3];
+                                    if (segments.Length > 4) provider.ProviderFirstName = segments[4];
+                                    if (segments.Length > 5) provider.ProviderMiddle = segments[5];
+                                    if (segments.Length > 7) provider.ProviderSuffix = segments[7];
+                                    if (segments.Length > 8) provider.ProviderIDQualifier = segments[8];
+                                    if (segments.Length > 9) provider.ProviderID = segments[9];
+                                    claim.Providers.Add(provider);
+                                }
                             }
                             break;
                         case "PW":
@@ -1029,6 +1118,54 @@ namespace Parser837
                                 claim.Providers.Add(provider);
                             }
                             break;
+                        case "DD":
+                            //dental assistant surgeon provider
+                            if (string.Compare(LoopName, "2311") == -1)
+                            {
+                                LoopName = "2310D";
+                                provider = new ClaimProvider();
+                                provider.ClaimID = claim.Header.ClaimID;
+                                provider.FileID = submittedFile.FileID;
+                                provider.ServiceLineNumber = "0";
+                                provider.LoopName = "2310D";
+                                provider.ProviderQualifier = "DD";
+                                provider.ProviderLastName = segments[3];
+                                if (segments.Length > 4) provider.ProviderFirstName = segments[4];
+                                if (segments.Length > 5) provider.ProviderMiddle = segments[5];
+                                if (segments.Length > 7) provider.ProviderSuffix = segments[7];
+                                if (segments.Length > 8) provider.ProviderIDQualifier = segments[8];
+                                if (segments.Length > 9) provider.ProviderID = segments[9];
+                                claim.Providers.Add(provider);
+                            }
+                            else if (string.Compare(LoopName, "2331") == -1)
+                            {
+                                LoopName = "2330H";
+                                provider = new ClaimProvider();
+                                provider.ClaimID = claim.Header.ClaimID;
+                                provider.FileID = submittedFile.FileID;
+                                provider.ServiceLineNumber = "0";
+                                provider.LoopName = "2330H";
+                                provider.ProviderQualifier = "DD";
+                                claim.Providers.Add(provider);
+                            }
+                            else if (string.Compare(LoopName, "2421") == -1)
+                            {
+                                LoopName = "2420B";
+                                provider = new ClaimProvider();
+                                provider.ClaimID = claim.Header.ClaimID;
+                                provider.FileID = submittedFile.FileID;
+                                provider.ServiceLineNumber = claim.Lines.Last().ServiceLineNumber;
+                                provider.LoopName = "2420B";
+                                provider.ProviderQualifier = "DD";
+                                provider.ProviderLastName = segments[3];
+                                if (segments.Length > 4) provider.ProviderFirstName = segments[4];
+                                if (segments.Length > 5) provider.ProviderMiddle = segments[5];
+                                if (segments.Length > 7) provider.ProviderSuffix = segments[7];
+                                if (segments.Length > 8) provider.ProviderIDQualifier = segments[8];
+                                if (segments.Length > 9) provider.ProviderID = segments[9];
+                                claim.Providers.Add(provider);
+                            }
+                            break;
                     }
                     break;
                 case "HL":
@@ -1102,6 +1239,7 @@ namespace Parser837
                         case "2010BB":
                         case "2310C":
                         case "2310E":
+                        case "2310F":
                         case "2330B":
                         case "2420C":
                         case "2420E":
@@ -1129,6 +1267,7 @@ namespace Parser837
                         case "2010BB":
                         case "2310C":
                         case "2310E":
+                        case "2310F":
                         case "2330B":
                         case "2420C":
                         case "2420E":
@@ -1157,196 +1296,21 @@ namespace Parser837
                     }
                     break;
                 case "REF":
-                    if (LoopName == "2010AA" || LoopName == "2010AC" || LoopName == "2010BB")
+                    secondaryIdentification = new ClaimSecondaryIdentification();
+                    secondaryIdentification.FileID = submittedFile.FileID;
+                    secondaryIdentification.ServiceLineNumber = string.Compare(LoopName, "2400") == -1 ? "0" : claim.Lines.Last().ServiceLineNumber;
+                    secondaryIdentification.LoopName = LoopName;
+                    secondaryIdentification.ProviderQualifier = segments[1];
+                    secondaryIdentification.ProviderID = segments[2];
+                    if (segments.Length > 4)
                     {
-                        secondaryIdentification = new ClaimSecondaryIdentification();
-                        secondaryIdentification.FileID = submittedFile.FileID;
-                        secondaryIdentification.ServiceLineNumber = "0";
-                        secondaryIdentification.LoopName = LoopName;
-                        secondaryIdentification.ProviderQualifier = segments[1];
-                        secondaryIdentification.ProviderID = segments[2];
-                        claim.SecondaryIdentifications.Add(secondaryIdentification);
+                        secondaryIdentification.OtherPayerPrimaryIDentification = segments[4].Split(elementDelimiter)[1];
                     }
-                    else if (LoopName == "2010BA")
+                    if (claim.Providers.Count > 0)
                     {
-                        switch (segments[1])
-                        {
-                            case "SY":
-                                claim.Subscribers.Last().SubscriberSSN = segments[2];
-                                break;
-                            case "Y4":
-                                claim.Subscribers.Last().SubscriberClaimNumber = segments[2];
-                                break;
-                        }
-                    }
-                    else if (LoopName == "2010CA")
-                    {
-                        switch (segments[1])
-                        {
-                            case "Y4":
-                                claim.Patients.Last().PatientClaimNumber = segments[2]; //property and casualty claim number
-                                break;
-                            case "1W":
-                                claim.Patients.Last().PatientMemberID = segments[2];  //member identification number
-                                break;
-                            case "SY":
-                                claim.Patients.Last().PatientSSN = segments[2]; //member social security number
-                                break;
-                        }
-                    }
-                    else if (LoopName == "2300")
-                    {
-                        switch (segments[1])
-                        {
-                            case "4N":
-                                claim.Header.ServiceAuthorizationExceptionCode = segments[2];
-                                break;
-                            case "F5":
-                                claim.Header.MedicareSection4081Indicator = segments[2];
-                                break;
-                            case "EW":
-                                claim.Header.MammographyCertificationNumber = segments[2];
-                                break;
-                            case "9F":
-                                claim.Header.ReferralNumber = segments[2];
-                                break;
-                            case "G1":
-                                claim.Header.PriorAuthorizationNumber = segments[2];
-                                break;
-                            case "F8":
-                                claim.Header.PayerClaimControlNumber = segments[2];
-                                break;
-                            case "X4":
-                                claim.Header.ClinicalLabNumber = segments[2];
-                                break;
-                            case "9A":
-                                claim.Header.RepricedClaimNumber = segments[2];
-                                break;
-                            case "9C":
-                                claim.Header.AdjustedClaimNumber = segments[2];
-                                break;
-                            case "LX":
-                                claim.Header.InvestigationalID = segments[2];
-                                break;
-                            case "D9":
-                                claim.Header.ValueAddedNetworkTraceNumber = segments[2];
-                                break;
-                            case "EA":
-                                claim.Header.MedicalRecordNumber = segments[2];
-                                break;
-                            case "P4":
-                                claim.Header.DemonstrationID = segments[2];
-                                break;
-                            case "1J":
-                                claim.Header.CarePlanOversightNumber = segments[2];
-                                break;
-                        }
-                    }
-                    else if (LoopName == "2310A" || LoopName == "2310B" || LoopName == "2310C" || LoopName == "2310D" || LoopName == "2330B" || LoopName == "2330C" || LoopName == "2330D" || LoopName == "2330E" || LoopName == "2330F" || LoopName == "2330G")
-                    {
-                        secondaryIdentification = new ClaimSecondaryIdentification();
-                        secondaryIdentification.FileID = submittedFile.FileID;
-                        secondaryIdentification.ServiceLineNumber = "0";
-                        secondaryIdentification.LoopName = LoopName;
-                        secondaryIdentification.ProviderQualifier = segments[1];
-                        secondaryIdentification.ProviderID = segments[2];
                         if (!string.IsNullOrEmpty(claim.Providers.Last().RepeatSequence)) secondaryIdentification.RepeatSequence = claim.Providers.Last().RepeatSequence;
-                        claim.SecondaryIdentifications.Add(secondaryIdentification);
                     }
-                    else if (LoopName == "2330A")
-                    {
-                        claim.Subscribers.Last().SubscriberSSN = segments[2];//ssn
-                    }
-                    else if (LoopName == "2400")
-                    {
-                        switch (segments[1])
-                        {
-                            case "9B":
-                                //service line repriced item reference number
-                                claim.Lines.Last().RepricedLineItemReferenceNumber = segments[2];
-                                break;
-                            case "9D":
-                                //service line adjusted repriced line item reference number
-                                claim.Lines.Last().AdjustedRepricedLineItemReferenceNumber = segments[2];
-                                break;
-                            case "G1":
-                                //service line Prior authorization number
-                                auth = new ClaimLineAuth();
-                                auth.ClaimID = claim.Header.ClaimID;
-                                auth.FileID = submittedFile.FileID;
-                                auth.ServiceLineNumber = claim.Lines.Last().ServiceLineNumber;
-                                auth.ReferenceQualifier = segments[1];
-                                auth.ReferralNumber = segments[2];
-                                if (segments.Length > 4)
-                                {
-                                    auth.OtherPayerPrimaryIdentifier = segments[4].Split(':')[1];
-                                }
-                                claim.Auths.Add(auth);
-                                break;
-                            case "6R":
-                                //service line item control number
-                                claim.Lines.Last().LineItemControlNumber = segments[2];
-                                break;
-                            case "EW":
-                                //service line mammography certification number
-                                claim.Lines.Last().MammographyCertificationNumber = segments[2];
-                                break;
-                            case "X4":
-                                //service line Clinical Laboratory Improvement Amendment (CLIA) number
-                                claim.Lines.Last().ClinicalLabNumber = segments[2];
-                                break;
-                            case "F4":
-                                //service line CLIA facility identification
-                                claim.Lines.Last().ReferringCLIANumber = segments[2];
-                                break;
-                            case "BT":
-                                //service line immunization batch number
-                                claim.Lines.Last().ImmunizationBatchNumber = segments[2];
-                                break;
-                            case "9F":
-                                //service line referral number
-                                auth = new ClaimLineAuth();
-                                auth.ClaimID = claim.Header.ClaimID;
-                                auth.FileID = submittedFile.FileID;
-                                auth.ServiceLineNumber = claim.Lines.Last().ServiceLineNumber;
-                                auth.ReferenceQualifier = segments[1];
-                                auth.ReferralNumber = segments[2];
-                                if (segments.Length > 4)
-                                {
-                                    auth.OtherPayerPrimaryIdentifier = segments[4].Split(':')[1];
-                                }
-                                claim.Auths.Add(auth);
-                                break;
-                        }
-                    }
-                    else if (string.Compare(LoopName, "2411") == -1)
-                    {
-                        switch (segments[1])
-                        {
-                            case "XZ":
-                                //service line drug identification
-                                claim.Lines.Last().LinkSequenceNumber = segments[2];
-                                LoopName = "2410";
-                                break;
-                            case "VY":
-                                //service line drug line sequence number
-                                claim.Lines.Last().PharmacyPrescriptionNumber = segments[2];
-                                LoopName = "2410";
-                                break;
-                        }
-                    }
-                    else if (string.Compare(LoopName, "2421") == -1)
-                    {
-                        secondaryIdentification = new ClaimSecondaryIdentification();
-                        secondaryIdentification.FileID = submittedFile.FileID;
-                        secondaryIdentification.ServiceLineNumber = claim.Lines.Last().ServiceLineNumber;
-                        secondaryIdentification.LoopName = LoopName;
-                        secondaryIdentification.ProviderQualifier = segments[1];
-                        secondaryIdentification.ProviderID = segments[2];
-                        if (segments.Length > 4) secondaryIdentification.OtherPayerPrimaryIDentification = segments[4].Split(':')[1];
-                        if (!string.IsNullOrEmpty(claim.Providers.Last().RepeatSequence)) secondaryIdentification.RepeatSequence = claim.Providers.Last().RepeatSequence;
-                        claim.SecondaryIdentifications.Add(secondaryIdentification);
-                    }
+                    claim.SecondaryIdentifications.Add(secondaryIdentification);
                     break;
                 case "SBR":
                     if (LoopName == "2000B")
@@ -1418,9 +1382,9 @@ namespace Parser837
                     }
                     claim.Header.ClaimID = segments[1];
                     claim.Header.ClaimAmount = segments[2];
-                    claim.Header.ClaimPOS = segments[5].Split(':')[0];
-                    claim.Header.ClaimType = segments[5].Split(':')[1];
-                    claim.Header.ClaimFrequencyCode = segments[5].Split(':')[2];
+                    claim.Header.ClaimPOS = segments[5].Split(elementDelimiter)[0];
+                    claim.Header.ClaimType = segments[5].Split(elementDelimiter)[1];
+                    claim.Header.ClaimFrequencyCode = segments[5].Split(elementDelimiter)[2];
                     claim.Header.ClaimProviderSignature = segments[6];
                     claim.Header.ClaimProviderAssignment = segments[7];
                     claim.Header.ClaimBenefitAssignment = segments[8];
@@ -1428,7 +1392,7 @@ namespace Parser837
                     if (segments.Length > 10) claim.Header.ClaimPatientSignatureSourceCode = segments[10];
                     if (segments.Length > 11)
                     {
-                        temparray = segments[11].Split(':');
+                        temparray = segments[11].Split(elementDelimiter);
                         claim.Header.ClaimRelatedCausesQualifier = temparray[0];
                         if (temparray.Length > 1) claim.Header.ClaimRelatedCausesCode = temparray[1];
                         if (temparray.Length > 3) claim.Header.ClaimRelatedStateCode = temparray[3];
@@ -1603,7 +1567,7 @@ namespace Parser837
                             else if (string.Compare(LoopName, "2431") == -1)
                             {
                                 LoopName = "2430";
-                                claim.Lines.Last().AdjudicationDate = segments[2];
+                                claim.SVDs.Last().AdjudicationDate = segments[3];
                             }
                             break;
                         case "472":
@@ -1617,8 +1581,27 @@ namespace Parser837
                                 }
                                 else if (segments[2] == "RD8")
                                 {
-                                    claim.Lines.Last().ServiceFromDate = segments[3].Split('-')[0];
-                                    claim.Lines.Last().ServiceToDate = segments[3].Split('-')[1];
+                                    if (segments.Length > 3)
+                                    {
+                                        claim.Lines.Last().ServiceFromDate = segments[3].Split('-')[0];
+                                        claim.Lines.Last().ServiceToDate = segments[3].Split('-')[1];
+                                    }
+                                }
+                            }
+                            else if (LoopName == "2300")
+                            {
+                                //dental service date
+                                if (segments[2] == "D8")
+                                {
+                                    claim.Header.ServiceFromDate = segments[3];
+                                }
+                                else if (segments[2] == "RD8")
+                                {
+                                    if (segments.Length > 3)
+                                    {
+                                        claim.Header.ServiceFromDate = segments[3].Split('-')[0];
+                                        claim.Header.ServiceToDate = segments[3].Split('-')[1];
+                                    }
                                 }
                             }
                             break;
@@ -1648,6 +1631,29 @@ namespace Parser837
                         case "434":
                             claim.Header.StatementFromDate = segments[3].Split('-')[0];
                             claim.Header.StatementToDate = segments[3].Split('-')[1];
+                            break;
+                        case "452":
+                            //dental appliance placement date
+                            if (LoopName == "2300")
+                            {
+                                claim.Header.AppliancePlacementDate = segments[3];
+                            }
+                            else if (LoopName == "2400")
+                            {
+                                claim.Lines.Last().AppliancePlacementDate = segments[3];
+                            }
+                            break;
+                        case "441":
+                            claim.Lines.Last().PriorPlacementDate = segments[3];
+                            break;
+                        case "446":
+                            claim.Lines.Last().ReplacementDate = segments[3];
+                            break;
+                        case "196":
+                            claim.Lines.Last().TreatmentStartDate = segments[3];
+                            break;
+                        case "198":
+                            claim.Lines.Last().TreatmentCompletionDate = segments[3];
                             break;
                     }
                     break;
@@ -1704,6 +1710,10 @@ namespace Parser837
                             case "F5":
                                 claim.Header.PatientPaidAmount = segments[2];
                                 break;
+                            case "F3":
+                                //institutional estimated amount due
+                                claim.Header.PatientResponsibilityAmount = segments[2];
+                                break;
                         }
                     }
                     else if (string.Compare(LoopName, "2321") == -1)
@@ -1728,13 +1738,16 @@ namespace Parser837
                         switch (segments[1])
                         {
                             case "T":
-                            case "GT":
                                 //service line sales tax amount
                                 claim.Lines.Last().SalesTaxAmount = segments[2];
                                 break;
                             case "F4":
                                 //service line postage claimed amount
                                 claim.Lines.Last().PostageClaimedAmount = segments[2];
+                                break;
+                            case "GT":
+                                //service tax amount
+                                claim.Lines.Last().ServiceTaxAmount = segments[2];
                                 break;
                             case "N8":
                                 claim.Lines.Last().FacilityTaxAmount = segments[2];
@@ -1747,7 +1760,7 @@ namespace Parser837
                         {
                             case "EAF":
                                 LoopName = "2430";
-                                claim.Lines.Last().ReaminingPatientLiabilityAmount = segments[2];
+                                claim.SVDs.Last().ReaminingPatientLiabilityAmount = segments[2];
                                 break;
                         }
                     }
@@ -1870,1329 +1883,25 @@ namespace Parser837
                     }
                     break;
                 case "HI":
-                    if (LoopName == "2300" && (segments[1].StartsWith("ABK") || segments[1].StartsWith("BK")))
+                    for (int i = 1; i < segments.Length; i++)
                     {
-                        for (int i = 1; i < segments.Length; i++)
-                        {
-                            temparray = segments[i].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            if (temparray.Length > 8) hi.PresentOnAdmissionIndicator = temparray[8];
-                            claim.His.Add(hi);
-                        }
-                    }
-                    else if (LoopName == "2300" && segments[1].StartsWith("BP"))
-                    {
-                        //anesthesia related procedure
-                        hi = new ClaimHI();
-                        hi.ClaimID = claim.Header.ClaimID;
-                        hi.FileID = submittedFile.FileID;
-                        hi.HIQual = segments[1].Split(':')[0];
-                        hi.HICode = segments[1].Split(':')[1];
-                        claim.His.Add(hi);
-                        if (segments.Length > 2)
-                        {
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = segments[2].Split(':')[0];
-                            hi.HICode = segments[2].Split(':')[1];
-                            claim.His.Add(hi);
-                        }
-                    }
-                    else if (LoopName == "2300" && segments[1].StartsWith("BG"))
-                    {
-                        //condition information
-                        hi = new ClaimHI();
-                        hi.ClaimID = claim.Header.ClaimID;
-                        hi.FileID = submittedFile.FileID;
-                        hi.HIQual = segments[1].Split(':')[0];
-                        hi.HICode = segments[1].Split(':')[1];
-                        claim.His.Add(hi);
-                        if (segments.Length > 2)
-                        {
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = segments[2].Split(':')[0];
-                            hi.HICode = segments[2].Split(':')[1];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 3)
-                        {
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = segments[3].Split(':')[0];
-                            hi.HICode = segments[3].Split(':')[1];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 4)
-                        {
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = segments[4].Split(':')[0];
-                            hi.HICode = segments[4].Split(':')[1];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 5)
-                        {
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = segments[5].Split(':')[0];
-                            hi.HICode = segments[5].Split(':')[1];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 6)
-                        {
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = segments[6].Split(':')[0];
-                            hi.HICode = segments[6].Split(':')[1];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 7)
-                        {
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = segments[7].Split(':')[0];
-                            hi.HICode = segments[7].Split(':')[1];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 8)
-                        {
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = segments[8].Split(':')[0];
-                            hi.HICode = segments[8].Split(':')[1];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 9)
-                        {
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = segments[9].Split(':')[0];
-                            hi.HICode = segments[9].Split(':')[1];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 10)
-                        {
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = segments[10].Split(':')[0];
-                            hi.HICode = segments[10].Split(':')[1];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 11)
-                        {
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = segments[11].Split(':')[0];
-                            hi.HICode = segments[11].Split(':')[1];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 12)
-                        {
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = segments[12].Split(':')[0];
-                            hi.HICode = segments[12].Split(':')[1];
-                            claim.His.Add(hi);
-                        }
-                    }
-                    else if (LoopName == "2300" && (segments[1].StartsWith("ABJ") || segments[1].StartsWith("BJ")))
-                    {
-                        //institutional admitting diagnosis
-                        hi = new ClaimHI();
-                        hi.ClaimID = claim.Header.ClaimID;
-                        hi.FileID = submittedFile.FileID;
-                        hi.HIQual = segments[1].Split(':')[0];
-                        hi.HICode = segments[1].Split(':')[1];
-                        claim.His.Add(hi);
-                    }
-                    else if (LoopName == "2300" && (segments[1].StartsWith("APR") || segments[1].StartsWith("PR")))
-                    {
-                        //institutional patient reason for visit
-                        hi = new ClaimHI();
-                        hi.ClaimID = claim.Header.ClaimID;
-                        hi.FileID = submittedFile.FileID;
-                        hi.HIQual = segments[1].Split(':')[0];
-                        hi.HICode = segments[1].Split(':')[1];
-                        claim.His.Add(hi);
-                        if (segments.Length > 2)
-                        {
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = segments[2].Split(':')[0];
-                            hi.HICode = segments[2].Split(':')[1];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 3)
-                        {
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = segments[3].Split(':')[0];
-                            hi.HICode = segments[3].Split(':')[1];
-                            claim.His.Add(hi);
-                        }
-                    }
-                    else if (LoopName == "2300" && (segments[1].StartsWith("ABN") || segments[1].StartsWith("BN")))
-                    {
-                        //intitutional external cause of injury
-                        temparray = segments[1].Split(':');
+                        if (string.IsNullOrEmpty(segments[i])) continue;
+                        temparray = segments[i].Split(elementDelimiter);
+                        if (temparray.Length < 2) continue;
                         hi = new ClaimHI();
                         hi.ClaimID = claim.Header.ClaimID;
                         hi.FileID = submittedFile.FileID;
                         hi.HIQual = temparray[0];
                         hi.HICode = temparray[1];
-                        if (temparray.Length > 9) hi.PresentOnAdmissionIndicator = temparray[9];
-
+                        if (temparray.Length > 3 && !string.IsNullOrEmpty(temparray[3]))
+                        {
+                            temparray2 = temparray[3].Split('-');
+                            hi.HIFromDate = temparray2[0];
+                            if (temparray2.Length > 1) hi.HIToDate = temparray2[1];
+                        }
+                        if (temparray.Length > 4 && !string.IsNullOrEmpty(temparray[4])) hi.HIAmount = temparray[4];
+                        if (temparray.Length > 8) hi.PresentOnAdmissionIndicator = temparray[8];
                         claim.His.Add(hi);
-                        if (segments.Length > 2)
-                        {
-                            temparray = segments[2].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            if (temparray.Length > 9) hi.PresentOnAdmissionIndicator = temparray[9];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 3)
-                        {
-                            temparray = segments[3].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            if (temparray.Length > 9) hi.PresentOnAdmissionIndicator = temparray[9];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 4)
-                        {
-                            temparray = segments[4].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            if (temparray.Length > 9) hi.PresentOnAdmissionIndicator = temparray[9];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 5)
-                        {
-                            temparray = segments[5].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            if (temparray.Length > 9) hi.PresentOnAdmissionIndicator = temparray[9];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 6)
-                        {
-                            temparray = segments[6].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            if (temparray.Length > 9) hi.PresentOnAdmissionIndicator = temparray[9];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 7)
-                        {
-                            temparray = segments[7].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            if (temparray.Length > 9) hi.PresentOnAdmissionIndicator = temparray[9];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 8)
-                        {
-                            temparray = segments[8].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            if (temparray.Length > 9) hi.PresentOnAdmissionIndicator = temparray[9];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 9)
-                        {
-                            temparray = segments[9].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            if (temparray.Length > 9) hi.PresentOnAdmissionIndicator = temparray[9];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 10)
-                        {
-                            temparray = segments[10].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            if (temparray.Length > 9) hi.PresentOnAdmissionIndicator = temparray[9];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 11)
-                        {
-                            temparray = segments[11].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            if (temparray.Length > 9) hi.PresentOnAdmissionIndicator = temparray[9];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 12)
-                        {
-                            temparray = segments[12].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            if (temparray.Length > 9) hi.PresentOnAdmissionIndicator = temparray[9];
-                            claim.His.Add(hi);
-                        }
-                    }
-                    else if (LoopName == "2300" && segments[1].StartsWith("DR"))
-                    {
-                        //institutional diagnosis related group information
-                        hi = new ClaimHI();
-                        hi.ClaimID = claim.Header.ClaimID;
-                        hi.FileID = submittedFile.FileID;
-                        hi.HIQual = segments[1].Split(':')[0];
-                        hi.HICode = segments[1].Split(':')[1];
-                        claim.His.Add(hi);
-                    }
-                    else if (LoopName == "2300" && (segments[1].StartsWith("ABF") || segments[1].StartsWith("BF")))
-                    {
-                        //institutional additional diagnosis codes
-                        temparray = segments[1].Split(':');
-                        hi = new ClaimHI();
-                        hi.ClaimID = claim.Header.ClaimID;
-                        hi.FileID = submittedFile.FileID;
-                        hi.HIQual = temparray[0];
-                        hi.HICode = temparray[1];
-                        if (temparray.Length > 9) hi.PresentOnAdmissionIndicator = temparray[9];
-                        claim.His.Add(hi);
-                        if (segments.Length > 2)
-                        {
-                            temparray = segments[2].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            if (temparray.Length > 9) hi.PresentOnAdmissionIndicator = temparray[9];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 3)
-                        {
-                            temparray = segments[3].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            if (temparray.Length > 9) hi.PresentOnAdmissionIndicator = temparray[9];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 4)
-                        {
-                            temparray = segments[4].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            if (temparray.Length > 9) hi.PresentOnAdmissionIndicator = temparray[9];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 5)
-                        {
-                            temparray = segments[5].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            if (temparray.Length > 9) hi.PresentOnAdmissionIndicator = temparray[9];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 6)
-                        {
-                            temparray = segments[6].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            if (temparray.Length > 9) hi.PresentOnAdmissionIndicator = temparray[9];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 7)
-                        {
-                            temparray = segments[7].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            if (temparray.Length > 9) hi.PresentOnAdmissionIndicator = temparray[9];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 8)
-                        {
-                            temparray = segments[8].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            if (temparray.Length > 9) hi.PresentOnAdmissionIndicator = temparray[9];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 9)
-                        {
-                            temparray = segments[9].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            if (temparray.Length > 9) hi.PresentOnAdmissionIndicator = temparray[9];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 10)
-                        {
-                            temparray = segments[10].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            if (temparray.Length > 9) hi.PresentOnAdmissionIndicator = temparray[9];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 11)
-                        {
-                            temparray = segments[11].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            if (temparray.Length > 9) hi.PresentOnAdmissionIndicator = temparray[9];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 12)
-                        {
-                            temparray = segments[12].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            if (temparray.Length > 9) hi.PresentOnAdmissionIndicator = temparray[9];
-                            claim.His.Add(hi);
-                        }
-                    }
-                    else if (LoopName == "2300" && (segments[1].StartsWith("BBR") || segments[1].StartsWith("BR") || segments[1].StartsWith("CAH")))
-                    {
-                        //institutional principle procedure information
-                        temparray = segments[1].Split(':');
-                        hi = new ClaimHI();
-                        hi.ClaimID = claim.Header.ClaimID;
-                        hi.FileID = submittedFile.FileID;
-                        hi.HIQual = temparray[0];
-                        hi.HICode = temparray[1];
-                        hi.HIFromDate = temparray[3];
-                        claim.His.Add(hi);
-                    }
-                    else if (LoopName == "2300" && (segments[1].StartsWith("BBQ") || segments[1].StartsWith("BQ")))
-                    {
-                        //institutional other principle procedure information
-                        temparray = segments[1].Split(':');
-                        hi = new ClaimHI();
-                        hi.ClaimID = claim.Header.ClaimID;
-                        hi.FileID = submittedFile.FileID;
-                        hi.HIQual = temparray[0];
-                        hi.HICode = temparray[1];
-                        hi.HIFromDate = temparray[3];
-                        claim.His.Add(hi);
-                        if (segments.Length > 2)
-                        {
-                            temparray = segments[2].Split(':');
-                            if (temparray.Length > 1)
-                            {
-                                hi = new ClaimHI();
-                                hi.ClaimID = claim.Header.ClaimID;
-                                hi.FileID = submittedFile.FileID;
-                                hi.HIQual = temparray[0];
-                                hi.HICode = temparray[1];
-                                hi.HIFromDate = temparray[3];
-                                claim.His.Add(hi);
-                            }
-                        }
-                        if (segments.Length > 3)
-                        {
-                            temparray = segments[3].Split(':');
-                            if (temparray.Length > 1)
-                            {
-                                hi = new ClaimHI();
-                                hi.ClaimID = claim.Header.ClaimID;
-                                hi.FileID = submittedFile.FileID;
-                                hi.HIQual = temparray[0];
-                                hi.HICode = temparray[1];
-                                hi.HIFromDate = temparray[3];
-                                claim.His.Add(hi);
-                            }
-                        }
-                        if (segments.Length > 4)
-                        {
-                            temparray = segments[4].Split(':');
-                            if (temparray.Length > 1)
-                            {
-                                hi = new ClaimHI();
-                                hi.ClaimID = claim.Header.ClaimID;
-                                hi.FileID = submittedFile.FileID;
-                                hi.HIQual = temparray[0];
-                                hi.HICode = temparray[1];
-                                hi.HIFromDate = temparray[3];
-                                claim.His.Add(hi);
-                            }
-                        }
-                        if (segments.Length > 5)
-                        {
-                            temparray = segments[5].Split(':');
-                            if (temparray.Length > 1)
-                            {
-                                hi = new ClaimHI();
-                                hi.ClaimID = claim.Header.ClaimID;
-                                hi.FileID = submittedFile.FileID;
-                                hi.HIQual = temparray[0];
-                                hi.HICode = temparray[1];
-                                hi.HIFromDate = temparray[3];
-                                claim.His.Add(hi);
-                            }
-                        }
-                        if (segments.Length > 6)
-                        {
-                            temparray = segments[6].Split(':');
-                            if (temparray.Length > 1)
-                            {
-                                hi = new ClaimHI();
-                                hi.ClaimID = claim.Header.ClaimID;
-                                hi.FileID = submittedFile.FileID;
-                                hi.HIQual = temparray[0];
-                                hi.HICode = temparray[1];
-                                hi.HIFromDate = temparray[3];
-                                claim.His.Add(hi);
-                            }
-                        }
-                        if (segments.Length > 7)
-                        {
-                            temparray = segments[7].Split(':');
-                            if (temparray.Length > 1)
-                            {
-                                hi = new ClaimHI();
-                                hi.ClaimID = claim.Header.ClaimID;
-                                hi.FileID = submittedFile.FileID;
-                                hi.HIQual = temparray[0];
-                                hi.HICode = temparray[1];
-                                hi.HIFromDate = temparray[3];
-                                claim.His.Add(hi);
-                            }
-                        }
-                        if (segments.Length > 8)
-                        {
-                            temparray = segments[8].Split(':');
-                            if (temparray.Length > 1)
-                            {
-                                hi = new ClaimHI();
-                                hi.ClaimID = claim.Header.ClaimID;
-                                hi.FileID = submittedFile.FileID;
-                                hi.HIQual = temparray[0];
-                                hi.HICode = temparray[1];
-                                hi.HIFromDate = temparray[3];
-                                claim.His.Add(hi);
-                            }
-                        }
-                        if (segments.Length > 9)
-                        {
-                            temparray = segments[9].Split(':');
-                            if (temparray.Length > 1)
-                            {
-                                hi = new ClaimHI();
-                                hi.ClaimID = claim.Header.ClaimID;
-                                hi.FileID = submittedFile.FileID;
-                                hi.HIQual = temparray[0];
-                                hi.HICode = temparray[1];
-                                hi.HIFromDate = temparray[3];
-                                claim.His.Add(hi);
-                            }
-                        }
-                        if (segments.Length > 10)
-                        {
-                            temparray = segments[10].Split(':');
-                            if (temparray.Length > 1)
-                            {
-                                hi = new ClaimHI();
-                                hi.ClaimID = claim.Header.ClaimID;
-                                hi.FileID = submittedFile.FileID;
-                                hi.HIQual = temparray[0];
-                                hi.HICode = temparray[1];
-                                hi.HIFromDate = temparray[3];
-                                claim.His.Add(hi);
-                            }
-                        }
-                        if (segments.Length > 11)
-                        {
-                            temparray = segments[11].Split(':');
-                            if (temparray.Length > 1)
-                            {
-                                hi = new ClaimHI();
-                                hi.ClaimID = claim.Header.ClaimID;
-                                hi.FileID = submittedFile.FileID;
-                                hi.HIQual = temparray[0];
-                                hi.HICode = temparray[1];
-                                hi.HIFromDate = temparray[3];
-                                claim.His.Add(hi);
-                            }
-                        }
-                        if (segments.Length > 12)
-                        {
-                            temparray = segments[12].Split(':');
-                            if (temparray.Length > 1)
-                            {
-                                hi = new ClaimHI();
-                                hi.ClaimID = claim.Header.ClaimID;
-                                hi.FileID = submittedFile.FileID;
-                                hi.HIQual = temparray[0];
-                                hi.HICode = temparray[1];
-                                hi.HIFromDate = temparray[3];
-                                claim.His.Add(hi);
-                            }
-                        }
-                    }
-                    else if (LoopName == "2300" && segments[1].StartsWith("BI"))
-                    {
-                        //institutional occurrence span codes
-                        temparray = segments[1].Split(':');
-                        hi = new ClaimHI();
-                        hi.ClaimID = claim.Header.ClaimID;
-                        hi.FileID = submittedFile.FileID;
-                        hi.HIQual = temparray[0];
-                        hi.HICode = temparray[1];
-                        hi.HIFromDate = temparray[3].Split('-')[0];
-                        hi.HIToDate = temparray[3].Split('-')[1];
-                        claim.His.Add(hi);
-                        if (segments.Length > 2)
-                        {
-                            temparray = segments[2].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            hi.HIFromDate = temparray[3].Split('-')[0];
-                            hi.HIToDate = temparray[3].Split('-')[1];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 3)
-                        {
-                            temparray = segments[3].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            hi.HIFromDate = temparray[3].Split('-')[0];
-                            hi.HIToDate = temparray[3].Split('-')[1];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 4)
-                        {
-                            temparray = segments[4].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            hi.HIFromDate = temparray[3].Split('-')[0];
-                            hi.HIToDate = temparray[3].Split('-')[1];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 5)
-                        {
-                            temparray = segments[5].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            hi.HIFromDate = temparray[3].Split('-')[0];
-                            hi.HIToDate = temparray[3].Split('-')[1];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 6)
-                        {
-                            temparray = segments[6].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            hi.HIFromDate = temparray[3].Split('-')[0];
-                            hi.HIToDate = temparray[3].Split('-')[1];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 7)
-                        {
-                            temparray = segments[7].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            hi.HIFromDate = temparray[3].Split('-')[0];
-                            hi.HIToDate = temparray[3].Split('-')[1];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 8)
-                        {
-                            temparray = segments[8].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            hi.HIFromDate = temparray[3].Split('-')[0];
-                            hi.HIToDate = temparray[3].Split('-')[1];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 9)
-                        {
-                            temparray = segments[9].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            hi.HIFromDate = temparray[3].Split('-')[0];
-                            hi.HIToDate = temparray[3].Split('-')[1];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 10)
-                        {
-                            temparray = segments[10].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            hi.HIFromDate = temparray[3].Split('-')[0];
-                            hi.HIToDate = temparray[3].Split('-')[1];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 11)
-                        {
-                            temparray = segments[11].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            hi.HIFromDate = temparray[3].Split('-')[0];
-                            hi.HIToDate = temparray[3].Split('-')[1];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 12)
-                        {
-                            temparray = segments[12].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            hi.HIFromDate = temparray[3].Split('-')[0];
-                            hi.HIToDate = temparray[3].Split('-')[1];
-                            claim.His.Add(hi);
-                        }
-                    }
-                    else if (LoopName == "2300" && segments[1].StartsWith("BH"))
-                    {
-                        //institutional occurrence codes
-                        temparray = segments[1].Split(':');
-                        hi = new ClaimHI();
-                        hi.ClaimID = claim.Header.ClaimID;
-                        hi.FileID = submittedFile.FileID;
-                        hi.HIQual = temparray[0];
-                        hi.HICode = temparray[1];
-                        hi.HIFromDate = temparray[3];
-                        claim.His.Add(hi);
-                        if (segments.Length > 2)
-                        {
-                            temparray = segments[2].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            hi.HIFromDate = temparray[3];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 3)
-                        {
-                            temparray = segments[3].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            hi.HIFromDate = temparray[3];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 4)
-                        {
-                            temparray = segments[4].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            hi.HIFromDate = temparray[3];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 5)
-                        {
-                            temparray = segments[5].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            hi.HIFromDate = temparray[3];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 6)
-                        {
-                            temparray = segments[6].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            hi.HIFromDate = temparray[3];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 7)
-                        {
-                            temparray = segments[7].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            hi.HIFromDate = temparray[3];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 8)
-                        {
-                            temparray = segments[8].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            hi.HIFromDate = temparray[3];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 9)
-                        {
-                            temparray = segments[9].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            hi.HIFromDate = temparray[3];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 10)
-                        {
-                            temparray = segments[10].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            hi.HIFromDate = temparray[3];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 11)
-                        {
-                            temparray = segments[11].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            hi.HIFromDate = temparray[3];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 12)
-                        {
-                            temparray = segments[12].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            hi.HIFromDate = temparray[3];
-                            claim.His.Add(hi);
-                        }
-                    }
-                    else if (LoopName == "2300" && segments[1].StartsWith("BE"))
-                    {
-                        //institutional value codes
-                        temparray = segments[1].Split(':');
-                        if (temparray.Length > 1)
-                        {
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            if (temparray.Length > 4) hi.HIAmount = temparray[4];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 2)
-                        {
-                            temparray = segments[2].Split(':');
-                            if (temparray.Length > 1)
-                            {
-                                hi = new ClaimHI();
-                                hi.ClaimID = claim.Header.ClaimID;
-                                hi.FileID = submittedFile.FileID;
-                                hi.HIQual = temparray[0];
-                                hi.HICode = temparray[1];
-                                if (temparray.Length > 4) hi.HIAmount = temparray[4];
-                                claim.His.Add(hi);
-                            }
-                        }
-                        if (segments.Length > 3)
-                        {
-                            temparray = segments[3].Split(':');
-                            if (temparray.Length > 1)
-                            {
-                                hi = new ClaimHI();
-                                hi.ClaimID = claim.Header.ClaimID;
-                                hi.FileID = submittedFile.FileID;
-                                hi.HIQual = temparray[0];
-                                hi.HICode = temparray[1];
-                                if (temparray.Length > 4) hi.HIAmount = temparray[4];
-                                claim.His.Add(hi);
-                            }
-                        }
-                        if (segments.Length > 4)
-                        {
-                            temparray = segments[4].Split(':');
-                            if (temparray.Length > 1)
-                            {
-                                hi = new ClaimHI();
-                                hi.ClaimID = claim.Header.ClaimID;
-                                hi.FileID = submittedFile.FileID;
-                                hi.HIQual = temparray[0];
-                                hi.HICode = temparray[1];
-                                if (temparray.Length > 4) hi.HIAmount = temparray[4];
-                                claim.His.Add(hi);
-                            }
-                        }
-                        if (segments.Length > 5)
-                        {
-                            temparray = segments[5].Split(':');
-                            if (temparray.Length > 1)
-                            {
-                                hi = new ClaimHI();
-                                hi.ClaimID = claim.Header.ClaimID;
-                                hi.FileID = submittedFile.FileID;
-                                hi.HIQual = temparray[0];
-                                hi.HICode = temparray[1];
-                                if (temparray.Length > 4) hi.HIAmount = temparray[4];
-                                claim.His.Add(hi);
-                            }
-                        }
-                        if (segments.Length > 6)
-                        {
-                            temparray = segments[6].Split(':');
-                            if (temparray.Length > 1)
-                            {
-                                hi = new ClaimHI();
-                                hi.ClaimID = claim.Header.ClaimID;
-                                hi.FileID = submittedFile.FileID;
-                                hi.HIQual = temparray[0];
-                                hi.HICode = temparray[1];
-                                if (temparray.Length > 4) hi.HIAmount = temparray[4];
-                                claim.His.Add(hi);
-                            }
-                        }
-                        if (segments.Length > 7)
-                        {
-                            temparray = segments[7].Split(':');
-                            if (temparray.Length > 1)
-                            {
-                                hi = new ClaimHI();
-                                hi.ClaimID = claim.Header.ClaimID;
-                                hi.FileID = submittedFile.FileID;
-                                hi.HIQual = temparray[0];
-                                hi.HICode = temparray[1];
-                                if (temparray.Length > 4) hi.HIAmount = temparray[4];
-                                claim.His.Add(hi);
-                            }
-                        }
-                        if (segments.Length > 8)
-                        {
-                            temparray = segments[8].Split(':');
-                            if (temparray.Length > 1)
-                            {
-                                hi = new ClaimHI();
-                                hi.ClaimID = claim.Header.ClaimID;
-                                hi.FileID = submittedFile.FileID;
-                                hi.HIQual = temparray[0];
-                                hi.HICode = temparray[1];
-                                if (temparray.Length > 4) hi.HIAmount = temparray[4];
-                                claim.His.Add(hi);
-                            }
-                        }
-                        if (segments.Length > 9)
-                        {
-                            temparray = segments[9].Split(':');
-                            if (temparray.Length > 1)
-                            {
-                                hi = new ClaimHI();
-                                hi.ClaimID = claim.Header.ClaimID;
-                                hi.FileID = submittedFile.FileID;
-                                hi.HIQual = temparray[0];
-                                hi.HICode = temparray[1];
-                                if (temparray.Length > 4) hi.HIAmount = temparray[4];
-                                claim.His.Add(hi);
-                            }
-                        }
-                        if (segments.Length > 10)
-                        {
-                            temparray = segments[10].Split(':');
-                            if (temparray.Length > 1)
-                            {
-                                hi = new ClaimHI();
-                                hi.ClaimID = claim.Header.ClaimID;
-                                hi.FileID = submittedFile.FileID;
-                                hi.HIQual = temparray[0];
-                                hi.HICode = temparray[1];
-                                if (temparray.Length > 4) hi.HIAmount = temparray[4];
-                                claim.His.Add(hi);
-                            }
-                        }
-                        if (segments.Length > 11)
-                        {
-                            temparray = segments[11].Split(':');
-                            if (temparray.Length > 1)
-                            {
-                                hi = new ClaimHI();
-                                hi.ClaimID = claim.Header.ClaimID;
-                                hi.FileID = submittedFile.FileID;
-                                hi.HIQual = temparray[0];
-                                hi.HICode = temparray[1];
-                                if (temparray.Length > 4) hi.HIAmount = temparray[4];
-                                claim.His.Add(hi);
-                            }
-                        }
-                        if (segments.Length > 12)
-                        {
-                            temparray = segments[12].Split(':');
-                            if (temparray.Length > 1)
-                            {
-                                hi = new ClaimHI();
-                                hi.ClaimID = claim.Header.ClaimID;
-                                hi.FileID = submittedFile.FileID;
-                                hi.HIQual = temparray[0];
-                                hi.HICode = temparray[1];
-                                if (temparray.Length > 4) hi.HIAmount = temparray[4];
-                                claim.His.Add(hi);
-                            }
-                        }
-                    }
-                    else if (LoopName == "2300" && segments[1].StartsWith("BG"))
-                    {
-                        //institutional condition codes
-                        temparray = segments[1].Split(':');
-                        hi = new ClaimHI();
-                        hi.ClaimID = claim.Header.ClaimID;
-                        hi.FileID = submittedFile.FileID;
-                        hi.HIQual = temparray[0];
-                        hi.HICode = temparray[1];
-                        claim.His.Add(hi);
-                        if (segments.Length > 2)
-                        {
-                            temparray = segments[2].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 3)
-                        {
-                            temparray = segments[3].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 4)
-                        {
-                            temparray = segments[4].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 5)
-                        {
-                            temparray = segments[5].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 6)
-                        {
-                            temparray = segments[6].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 7)
-                        {
-                            temparray = segments[7].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 8)
-                        {
-                            temparray = segments[8].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 9)
-                        {
-                            temparray = segments[9].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 10)
-                        {
-                            temparray = segments[10].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 11)
-                        {
-                            temparray = segments[11].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 12)
-                        {
-                            temparray = segments[12].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            claim.His.Add(hi);
-                        }
-                    }
-                    else if (LoopName == "2300" && segments[1].StartsWith("TC"))
-                    {
-                        //institutional treatment codes
-                        temparray = segments[1].Split(':');
-                        hi = new ClaimHI();
-                        hi.ClaimID = claim.Header.ClaimID;
-                        hi.FileID = submittedFile.FileID;
-                        hi.HIQual = temparray[0];
-                        hi.HICode = temparray[1];
-                        claim.His.Add(hi);
-                        if (segments.Length > 2)
-                        {
-                            temparray = segments[2].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 3)
-                        {
-                            temparray = segments[3].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 4)
-                        {
-                            temparray = segments[4].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 5)
-                        {
-                            temparray = segments[5].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 6)
-                        {
-                            temparray = segments[6].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 7)
-                        {
-                            temparray = segments[7].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 8)
-                        {
-                            temparray = segments[8].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 9)
-                        {
-                            temparray = segments[9].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 10)
-                        {
-                            temparray = segments[10].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 11)
-                        {
-                            temparray = segments[11].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            claim.His.Add(hi);
-                        }
-                        if (segments.Length > 12)
-                        {
-                            temparray = segments[12].Split(':');
-                            hi = new ClaimHI();
-                            hi.ClaimID = claim.Header.ClaimID;
-                            hi.FileID = submittedFile.FileID;
-                            hi.HIQual = temparray[0];
-                            hi.HICode = temparray[1];
-                            claim.His.Add(hi);
-                        }
                     }
                     break;
                 case "HCP":
@@ -3234,7 +1943,7 @@ namespace Parser837
                 case "CAS":
                     //segment repeat 5 times, CO(contractual obiligation), CR(Correction and reversals), OA(other adjustments), PI(payer initiated reductions), PR(patient responsibility)
                     //reason code for each group maximum:6
-                    if (string.Compare(LoopName, "2321") == -1)
+                    if (string.Compare(LoopName, "2331") == -1)
                     {
                         LoopName = "2320";
                         cas = new ClaimCAS();
@@ -3426,7 +2135,7 @@ namespace Parser837
                     claim.Lines.Add(line);
                     break;
                 case "SV1":
-                    temparray = segments[1].Split(':');
+                    temparray = segments[1].Split(elementDelimiter);
                     claim.Lines.Last().ServiceIDQualifier = temparray[0];
                     claim.Lines.Last().ProcedureCode = temparray[1];
                     if (temparray.Length > 2) claim.Lines.Last().ProcedureModifier1 = temparray[2];
@@ -3438,19 +2147,22 @@ namespace Parser837
                     claim.Lines.Last().LineItemUnit = segments[3];
                     claim.Lines.Last().ServiceUnitQuantity = segments[4];
                     claim.Lines.Last().LineItemPOS = segments[5];
-                    temparray = segments[7].Split(':');
-                    claim.Lines.Last().DiagPointer1 = temparray[0];
-                    if (temparray.Length > 1) claim.Lines.Last().DiagPointer2 = temparray[1];
-                    if (temparray.Length > 2) claim.Lines.Last().DiagPointer3 = temparray[2];
-                    if (temparray.Length > 3) claim.Lines.Last().DiagPointer4 = temparray[3];
-                    if (segments.Length > 9) claim.Lines.Last().EmergencyIndicator = segments[9];
-                    if (segments.Length > 11) claim.Lines.Last().EPSDTIndicator = segments[11];
-                    if (segments.Length > 12) claim.Lines.Last().FamilyPlanningIndicator = segments[12];
-                    if (segments.Length > 15) claim.Lines.Last().CopayStatusCode = segments[15];
+                    if (segments.Length > 7)
+                    {
+                        temparray = segments[7].Split(elementDelimiter);
+                        claim.Lines.Last().DiagPointer1 = temparray[0];
+                        if (temparray.Length > 1) claim.Lines.Last().DiagPointer2 = temparray[1];
+                        if (temparray.Length > 2) claim.Lines.Last().DiagPointer3 = temparray[2];
+                        if (temparray.Length > 3) claim.Lines.Last().DiagPointer4 = temparray[3];
+                        if (segments.Length > 9) claim.Lines.Last().EmergencyIndicator = segments[9];
+                        if (segments.Length > 11) claim.Lines.Last().EPSDTIndicator = segments[11];
+                        if (segments.Length > 12) claim.Lines.Last().FamilyPlanningIndicator = segments[12];
+                        if (segments.Length > 15) claim.Lines.Last().CopayStatusCode = segments[15];
+                    }
                     break;
                 case "SV5":
-                    claim.Lines.Last().DMEQualifier = segments[1].Split(':')[0];
-                    claim.Lines.Last().DMEProcedureCode = segments[1].Split(':')[1];
+                    claim.Lines.Last().DMEQualifier = segments[1].Split(elementDelimiter)[0];
+                    claim.Lines.Last().DMEProcedureCode = segments[1].Split(elementDelimiter)[1];
                     claim.Lines.Last().DMEDays = segments[3];
                     claim.Lines.Last().DMERentalPrice = segments[4];
                     claim.Lines.Last().DMEPurchasePrice = segments[5];
@@ -3514,7 +2226,7 @@ namespace Parser837
                         svd.ServiceLineNumber = claim.Lines.Last().ServiceLineNumber;
                         svd.OtherPayerPrimaryIdentifier = segments[1];
                         svd.ServiceLinePaidAmount = segments[2];
-                        temparray = segments[3].Split(':');
+                        temparray = segments[3].Split(elementDelimiter);
                         if (temparray.Length > 0) svd.ServiceQualifier = temparray[0];
                         if (temparray.Length > 1) svd.ProcedureCode = temparray[1];
                         if (temparray.Length > 2) svd.ProcedureModifier1 = temparray[2];
@@ -3575,12 +2287,6 @@ namespace Parser837
                         claim.Header.PatientStatusCode = segments[3];
                     }
                     break;
-                case "F3":
-                    if (LoopName == "2300")
-                    {
-                        claim.Header.PatientResponsibilityAmount = segments[2];
-                    }
-                    break;
                 case "MIA":
                     LoopName = "2320";
                     claim.Subscribers.Last().CoveredDays = segments[1];
@@ -3609,7 +2315,7 @@ namespace Parser837
                     break;
                 case "SV2":
                     claim.Lines.Last().RevenueCode = segments[1];
-                    temparray = segments[2].Split(':');
+                    temparray = segments[2].Split(elementDelimiter);
                     if (temparray.Length > 0) claim.Lines.Last().ServiceIDQualifier = temparray[0];
                     if (temparray.Length > 1) claim.Lines.Last().ProcedureCode = temparray[1];
                     if (temparray.Length > 2) claim.Lines.Last().ProcedureModifier1 = temparray[2];
@@ -3622,10 +2328,73 @@ namespace Parser837
                     claim.Lines.Last().ServiceUnitQuantity = segments[5];
                     if (segments.Length > 7) claim.Lines.Last().LineItemDeniedChargeAmount = segments[7];
                     break;
+                case "DN1":
+                    if (segments.Length > 1) claim.Header.OrthoMonthTotal = segments[1];
+                    if (segments.Length > 2) claim.Header.OrthoMonthRemaining = segments[2];
+                    break;
+                case "DN2":
+                    toothStatus = new ToothStatus();
+                    toothStatus.FileID = submittedFile.FileID;
+                    toothStatus.ClaimID = claim.Header.ClaimID;
+                    toothStatus.ServiceLineNumber = "0";
+                    toothStatus.LoopName = "2300";
+                    toothStatus.ToothNumber = segments[1];
+                    toothStatus.StatusCode = segments[2];
+                    claim.ToothStatuses.Add(toothStatus);
+                    break;
+                case "SV3":
+                    temparray = segments[1].Split(elementDelimiter);
+                    claim.Lines.Last().ServiceIDQualifier = temparray[0];
+                    claim.Lines.Last().ProcedureCode = temparray[1];
+                    if (temparray.Length > 2) claim.Lines.Last().ProcedureModifier1 = temparray[2];
+                    if (temparray.Length > 3) claim.Lines.Last().ProcedureModifier2 = temparray[3];
+                    if (temparray.Length > 4) claim.Lines.Last().ProcedureModifier3 = temparray[4];
+                    if (temparray.Length > 5) claim.Lines.Last().ProcedureModifier4 = temparray[5];
+                    if (temparray.Length > 6) claim.Lines.Last().ProcedureDescription = temparray[6];
+                    claim.Lines.Last().LineItemChargeAmount = segments[2];
+                    if (segments.Length > 3) claim.Lines.Last().LineItemPOS = segments[3];
+                    if (segments.Length > 4)
+                    {
+                        temparray = segments[4].Split(elementDelimiter);
+                        if (temparray.Length > 0) claim.Lines.Last().OralCavityDesignationCode1 = segments[0];
+                        if (temparray.Length > 1) claim.Lines.Last().OralCavityDesignationCode2 = segments[1];
+                        if (temparray.Length > 2) claim.Lines.Last().OralCavityDesignationCode3 = segments[2];
+                        if (temparray.Length > 3) claim.Lines.Last().OralCavityDesignationCode4 = segments[3];
+                        if (temparray.Length > 4) claim.Lines.Last().OralCavityDesignationCode5 = segments[4];
+                    }
+                    if (segments.Length > 5) claim.Lines.Last().ProsthesisCrownOrInlayCode = segments[5];
+                    if (segments.Length > 6) claim.Lines.Last().ServiceUnitQuantity = segments[6];
+                    if (segments.Length > 11)
+                    {
+                        temparray = segments[11].Split(elementDelimiter);
+                        if (temparray.Length > 0) claim.Lines.Last().DiagPointer1 = segments[0];
+                        if (temparray.Length > 1) claim.Lines.Last().DiagPointer2 = segments[1];
+                        if (temparray.Length > 2) claim.Lines.Last().DiagPointer3 = segments[2];
+                        if (temparray.Length > 3) claim.Lines.Last().DiagPointer4 = segments[4];
+                    }
+                    break;
+                case "TOO":
+                    toothStatus = new ToothStatus();
+                    toothStatus.FileID = submittedFile.FileID;
+                    toothStatus.ClaimID = claim.Header.ClaimID;
+                    toothStatus.ServiceLineNumber = claim.Lines.Last().ServiceLineNumber;
+                    toothStatus.LoopName = "2400";
+                    toothStatus.ToothNumber = segments[2];
+                    if (segments.Length > 3)
+                    {
+                        temparray = segments[3].Split(elementDelimiter);
+                        if (temparray.Length > 0) toothStatus.StatusCode = temparray[0];
+                        if (temparray.Length > 1) toothStatus.SurfaceCode2 = temparray[1];
+                        if (temparray.Length > 2) toothStatus.SurfaceCode3 = temparray[2];
+                        if (temparray.Length > 3) toothStatus.SurfaceCode4 = temparray[3];
+                        if (temparray.Length > 4) toothStatus.SurfaceCode5 = temparray[4];
+                    }
+                    claim.ToothStatuses.Add(toothStatus);
+
+                    break;
                 default:
                     break;
             }
-
         }
         public static void InitilizeClaim(string loopFlag, ref Claim claim, ref List<Claim> claims, ref SubmissionLog submittedFile)
         {
