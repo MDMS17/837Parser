@@ -3,6 +3,56 @@ begin
 exec ('create schema Sub_History')
 end
 
+
+if object_id('Sub_History.ToothStatus') is not null drop table Sub_History.ToothStatus
+go
+create table Sub_History.ToothStatus
+(
+ID bigint identity(1,1) not null,
+FileID int not null,
+LoopName varchar(50) null,
+ClaimID varchar(50) null,
+ServiceLineNumber varchar(50) null,
+ToothNumber varchar(50) null,
+StatusCode varchar(50) null,
+SurfaceCode2 varchar(50) null,
+SurfaceCode3 varchar(50) null,
+SurfaceCode4 varchar(50) null,
+SurfaceCode5 varchar(50) null,
+CONSTRAINT [PK_Sub_History.ToothStatus] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+go
+
+if object_id('Sub_History.ClaimTempHost') is not null drop table Sub_History.ClaimTempHost
+go
+CREATE TABLE [Sub_History].[ClaimTempHost](
+	[ClaimID] [varchar](50) NOT NULL,
+ CONSTRAINT [PK_Sub_History.ClaimID] PRIMARY KEY CLUSTERED 
+(
+	[ClaimID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+go
+
+
+if object_id('Sub_History.Hipaa_XML') is not null drop table Sub_History.Hipaa_XML
+go
+CREATE TABLE [Sub_History].[Hipaa_XML](
+	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[ClaimType] [varchar](50) NOT NULL,
+	[ClaimID] [varchar](50) NOT NULL,
+	[EncounterId] [varchar](50) NULL,
+	[ClaimHipaaXML] [varchar](max) NOT NULL,
+ CONSTRAINT [PK_HipaaXML] PRIMARY KEY CLUSTERED 
+(
+	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY] 
+GO
+
 if object_id('Sub_History.ClaimProviders') is not null drop table Sub_History.ClaimProviders
 go
 create table Sub_History.ClaimProviders
@@ -21,8 +71,8 @@ ProviderMiddle varchar(50) null,
 ProviderSuffix varchar(50) null,
 ProviderIDQualifier varchar(50) null,
 ProviderID varchar(50) null,
-ProviderAddress varchar(100) null,
-ProviderAddress2 varchar(50) null,
+ProviderAddress varchar(200) null,
+ProviderAddress2 varchar(100) null,
 ProviderCity varchar(50) null,
 ProviderState varchar(50) null,
 ProviderZip varchar(50) null,
@@ -47,7 +97,7 @@ ServiceLineNumber varchar(50) null,
 LoopName varchar(50) null,
 ProviderQualifier varchar(50) null,
 ProviderNPI varchar(50) null,
-ContactName varchar(50) null,
+ContactName varchar(100) null,
 Email varchar(50) null,
 Fax varchar(50) null,
 Phone varchar(50) null,
@@ -100,6 +150,11 @@ AssumedStartDate varchar(50) null,
 AssumedEndDate varchar(50) null,
 FirstContactDate varchar(50) null,
 RepricerReceivedDate varchar(50) null,
+AppliancePlacementDate varchar(50) null,
+ServiceFromDate varchar(50) null,
+ServiceToDate varchar(50) null,
+OrthoMonthTotal varchar(50) null,
+OrthoMonthRemaining varchar(50) null,
 ContractTypeCode varchar(50) null,
 ContractAmount varchar(50) null,
 ContractPercentage varchar(50) null,
@@ -107,25 +162,11 @@ ContractCode varchar(50) null,
 ContractTermsDiscountPercentage varchar(50) null,
 ContractVersionIdentifier varchar(50) null,
 PatientPaidAmount varchar(50) null,
-ServiceAuthorizationExceptionCode varchar(50) null,
-MedicareSection4081Indicator varchar(50) null,
-MammographyCertificationNumber varchar(50) null,
-ReferralNumber varchar(50) null,
-PriorAuthorizationNumber varchar(50) null,
-PayerClaimControlNumber varchar(50) null,
-ClinicalLabNumber varchar(50) null,
-RepricedClaimNumber varchar(50) null,
-AdjustedClaimNumber varchar(50) null,
-InvestigationalID varchar(50) null,
-ValueAddedNetworkTraceNumber varchar(50) null,
-MedicalRecordNumber varchar(50) null,
-DemonstrationID varchar(50) null,
-CarePlanOversightNumber varchar(50) null,
 AmbulanceWeight varchar(50) null,
 AmbulanceReasonCode varchar(50) null,
 AmbulanceQuantity varchar(50) null,
-AmbulanceRoundTripDescription varchar(50) null,
-AmbulanceStretcherDescription varchar(50) null,
+AmbulanceRoundTripDescription varchar(100) null,
+AmbulanceStretcherDescription varchar(100) null,
 PatientConditionCode varchar(50) null,
 PatientConditionDescription1 varchar(50) null,
 PatientConditionDescription2 varchar(50) null,
@@ -171,7 +212,7 @@ PatientLastName varchar(50) null,
 PatientFirstName varchar(50) null,
 PatientMiddle varchar(50) null,
 PatientSuffix varchar(50) null,
-PatientAddress varchar(100) null,
+PatientAddress varchar(200) null,
 PatientAddress2 varchar(50) null,
 PatientCity varchar(50) null,
 PatientState varchar(50) null,
@@ -180,9 +221,6 @@ PatientCountry varchar(50) null,
 PatientCountrySubCode varchar(50) null,
 PatientBirthDate varchar(50) null,
 PatientGender varchar(50) null,
-PatientClaimNumber varchar(50) null,
-PatientSSN varchar(50) null,
-PatientMemberID varchar(50) null,
 PatientContactName varchar(50) null,
 PatientContactPhone varchar(50) null,
 PatientContactPhoneEx varchar(50) null,
@@ -330,8 +368,8 @@ MidddleName varchar(50) null,
 NameSuffix varchar(50) null,
 IDQualifier varchar(50) null,
 IDCode varchar(50) null,
-SubscriberAddress varchar(100) null,
-SubscriberAddress2 varchar(50) null,
+SubscriberAddress varchar(200) null,
+SubscriberAddress2 varchar(100) null,
 SubscriberCity varchar(50) null,
 SubscriberState varchar(50) null,
 SubscriberZip varchar(50) null,
@@ -339,8 +377,6 @@ SubscriberCountry varchar(50) null,
 SubscriberCountrySubCode varchar(50) null,
 SubscriberBirthDate varchar(50) null,
 SubscriberGender varchar(50) null,
-SubscriberSSN varchar(50) null,
-SubscriberClaimNumber varchar(50) null,
 SubscriberContactName varchar(50) null,
 SubscriberContactPhone varchar(50) null,
 SubscriberContactPhoneEx varchar(50) null,
@@ -430,25 +466,6 @@ CONSTRAINT [PK_Sub_History.ClaimLineMEAs] PRIMARY KEY CLUSTERED
 ) ON [PRIMARY]
 go
 
-if object_id('Sub_History.ClaimLineAuths') is not null drop table Sub_History.ClaimLineAuths
-go
-
-create table Sub_History.ClaimLineAuths
-(
-ID bigint identity(1,1) not null,
-FileID int not null,
-ClaimID varchar(50) null,
-ServiceLineNumber varchar(50) null,
-ReferenceQualifier varchar(50) null,
-ReferralNumber varchar(50) null,
-OtherPayerPrimaryIdentifier varchar(50) null,
-CONSTRAINT [PK_Sub_History.ClaimLineAuths] PRIMARY KEY CLUSTERED 
-(
-	[Id] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY]
-go
-
 if object_id('Sub_History.ClaimLineSVDs') is not null drop table Sub_History.ClaimLineSVDs
 go
 
@@ -471,6 +488,8 @@ ProcedureDescription varchar(100) null,
 PaidServiceUnitCount varchar(50) null,
 BundledLineNumber varchar(50) null,
 ServiceLineRevenueCode varchar(50) null,
+AdjudicationDate varchar(50) null,
+ReaminingPatientLiabilityAmount varchar(50) null,
 CONSTRAINT [PK_Sub_History.ClaimLineSVDs] PRIMARY KEY CLUSTERED 
 (
 	[Id] ASC
@@ -556,8 +575,8 @@ DMEFrequencyCode varchar(50) null,
 PatientWeight varchar(50) null,
 AmbulanceTransportReasonCode varchar(50) null,
 TransportDistance varchar(50) null,
-RoundTripPurposeDescription varchar(50) null,
-StretcherPueposeDescription varchar(50) null,
+RoundTripPurposeDescription varchar(100) null,
+StretcherPueposeDescription varchar(100) null,
 CertificationTypeCode varchar(50) null,
 DMEDuration varchar(50) null,
 ServiceFromDate varchar(50) null,
@@ -580,13 +599,6 @@ ContractPercentage varchar(50) null,
 ContractCode varchar(50) null,
 TermsDiscountPercentage varchar(50) null,
 ContractVersionIdentifier varchar(50) null,
-RepricedLineItemReferenceNumber varchar(50) null,
-AdjustedRepricedLineItemReferenceNumber varchar(50) null,
-LineItemControlNumber varchar(50) null,
-MammographyCertificationNumber varchar(50) null,
-ClinicalLabNumber varchar(50) null,
-ReferringCLIANumber varchar(50) null,
-ImmunizationBatchNumber varchar(50) null,
 SalesTaxAmount varchar(50) null,
 PostageClaimedAmount varchar(50) null,
 PurchasedServiceProviderIdentifier varchar(50) null,
@@ -609,13 +621,21 @@ LINQualifier varchar(50) null,
 NationalDrugCode varchar(50) null,
 DrugQuantity varchar(50) null,
 DrugQualifier varchar(50) null,
-LinkSequenceNumber varchar(50) null,
-PharmacyPrescriptionNumber varchar(50) null,
-AdjudicationDate varchar(50) null,
-ReaminingPatientLiabilityAmount varchar(50) null,
 RevenueCode varchar(50) null,
 LineItemDeniedChargeAmount varchar(50) null,
+ServiceTaxAmount varchar(50) null,
 FacilityTaxAmount varchar(50) null,
+PriorPlacementDate varchar(50) null,
+AppliancePlacementDate varchar(50) null,
+ReplacementDate varchar(50) null,
+TreatmentStartDate varchar(50) null,
+TreatmentCompletionDate varchar(50) null,
+OralCavityDesignationCode1 varchar(50) null,
+OralCavityDesignationCode2 varchar(50) null,
+OralCavityDesignationCode3 varchar(50) null,
+OralCavityDesignationCode4 varchar(50) null,
+OralCavityDesignationCode5 varchar(50) null,
+ProsthesisCrownOrInlayCode varchar(50) null,
 CONSTRAINT [PK_Sub_History.ServiceLines] PRIMARY KEY CLUSTERED 
 (
 	[Id] ASC
