@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.28010.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Parser837", "Parser837\Parser837.csproj", "{6C6CA775-A401-4367-8DD4-A2E3B394DE7F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExportModule", "..\ExportModule\ExportModule.csproj", "{BF32186D-59F9-4F33-AF07-80917943AFB9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{6C6CA775-A401-4367-8DD4-A2E3B394DE7F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6C6CA775-A401-4367-8DD4-A2E3B394DE7F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6C6CA775-A401-4367-8DD4-A2E3B394DE7F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BF32186D-59F9-4F33-AF07-80917943AFB9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BF32186D-59F9-4F33-AF07-80917943AFB9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BF32186D-59F9-4F33-AF07-80917943AFB9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BF32186D-59F9-4F33-AF07-80917943AFB9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
