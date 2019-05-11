@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExportModule.Model.DataSource
+namespace ExportModule.Model
 {
     public class SubHist_Header
     {

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Parser837;
-using ExportModule.Model.DataSource;
+using ExportModule.Model;
 using System.Xml.Linq;
 
 namespace ExportModule
@@ -1887,18 +1887,49 @@ namespace ExportModule
                 {
                     foreach (XElement child_ele in ele.Nodes())
                     {
-                        ClaimHI hi = new ClaimHI();
-                        hi.ClaimID = hipaaclaim.ClaimID;
-                        hi.FileID = 0;
-                        foreach (XElement grand_ele in child_ele.Descendants())
+                        if (child_ele.Name.ToString().StartsWith("HI_Other"))
                         {
-                            if (grand_ele.Name.ToString().StartsWith("C02201")) hi.HIQual = grand_ele.Value;
-                            if (grand_ele.Name.ToString().StartsWith("C02202")) hi.HICode = grand_ele.Value;
-                            if (grand_ele.Name.ToString().StartsWith("C02204")) hi.HIFromDate = grand_ele.Value;
-                            if (grand_ele.Name.ToString().StartsWith("C02205")) hi.HIAmount = grand_ele.Value;
-                            if (grand_ele.Name.ToString().StartsWith("C02209")) hi.PresentOnAdmissionIndicator = grand_ele.Value;
+                            foreach (XElement grand_ele in child_ele.Descendants())
+                            {
+                                ClaimHI hi = new ClaimHI();
+                                hi.ClaimID = hipaaclaim.ClaimID;
+                                hi.FileID = 0;
+                                foreach (XElement grand_grand_ele in grand_ele.Descendants())
+                                {
+                                    if (grand_grand_ele.Name.ToString().StartsWith("C02201")) hi.HIQual = grand_grand_ele.Value;
+                                    if (grand_grand_ele.Name.ToString().StartsWith("C02202")) hi.HICode = grand_grand_ele.Value;
+                                    if (grand_grand_ele.Name.ToString().StartsWith("C02204")) hi.HIFromDate = grand_grand_ele.Value;
+                                    if (grand_grand_ele.Name.ToString().StartsWith("C02205")) hi.HIAmount = grand_grand_ele.Value;
+                                    if (grand_grand_ele.Name.ToString().StartsWith("C02209")) hi.PresentOnAdmissionIndicator = grand_grand_ele.Value;
+                                    if (!string.IsNullOrEmpty(hi.HIFromDate) && hi.HIFromDate.Contains("-"))
+                                    {
+                                        hi.HIToDate = hi.HIFromDate.Substring(hi.HIFromDate.Length - 8, 8);
+                                        hi.HIFromDate = hi.HIFromDate.Substring(0, 8);
+                                    }
+                                }
+                                claim.His.Add(hi);
+                            }
                         }
-                        claim.His.Add(hi);
+                        else
+                        {
+                            ClaimHI hi = new ClaimHI();
+                            hi.ClaimID = hipaaclaim.ClaimID;
+                            hi.FileID = 0;
+                            foreach (XElement grand_ele in child_ele.Descendants())
+                            {
+                                if (grand_ele.Name.ToString().StartsWith("C02201")) hi.HIQual = grand_ele.Value;
+                                if (grand_ele.Name.ToString().StartsWith("C02202")) hi.HICode = grand_ele.Value;
+                                if (grand_ele.Name.ToString().StartsWith("C02204")) hi.HIFromDate = grand_ele.Value;
+                                if (grand_ele.Name.ToString().StartsWith("C02205")) hi.HIAmount = grand_ele.Value;
+                                if (grand_ele.Name.ToString().StartsWith("C02209")) hi.PresentOnAdmissionIndicator = grand_ele.Value;
+                                if (!string.IsNullOrEmpty(hi.HIFromDate) && hi.HIFromDate.Contains("-"))
+                                {
+                                    hi.HIToDate = hi.HIFromDate.Substring(hi.HIFromDate.Length - 8, 8);
+                                    hi.HIFromDate = hi.HIFromDate.Substring(0, 8);
+                                }
+                            }
+                            claim.His.Add(hi);
+                        }
                     }
                 }
                 //XElement claimAMT = loop2000B.Descendants(ns + "AMT_PatientAmountPaid").FirstOrDefault();
