@@ -19,56 +19,59 @@ namespace ExportModule
 
         private void Form1_Load(object sender, EventArgs e)
         {
-
+            this.toolStripButton4.Click += new System.EventHandler(async (s1, e1) => await this.toolStripButton4_ClickAsync());
+            this.toolStripButton6.Click += new System.EventHandler(async (s1, e1) => await this.toolStripButton6_ClickAsync());
+            this.toolStripButton5.Click += new System.EventHandler(async (s1, e1) => await this.toolStripButton5_ClickAsync());
+            this.toolStripButton7.Click += new System.EventHandler(async (s1, e1) => await this.toolStripButton7_ClickAsync());
+            this.toolStripButton1.Click += new System.EventHandler(async (s1, e1) => await this.toolStripButton1_ClickAsync());
+            this.toolStripButton2.Click += new System.EventHandler(async (s1, e1) => await this.toolStripButton2_ClickAsync());
+            this.toolStripButton3.Click += new System.EventHandler(async (s1, e1) => await this.toolStripButton3_ClickAsync());
+            this.toolStripButton8.Click += new System.EventHandler(async (s1, e1) => await this.toolStripButton8_ClickAsync());
+            this.toolStripButton9.Click += new System.EventHandler(async (s1, e1) => await this.toolStripButton9_ClickAsync());
+        }
+        private async Task toolStripButton4_ClickAsync()
+        {
+            await ExportToDHCS.Export837PAsync("305");
+        }
+        private async Task toolStripButton6_ClickAsync()
+        {
+            await ExportToDHCS.Export837PAsync("306");
+        }
+        private async Task toolStripButton5_ClickAsync()
+        {
+            await ExportToDHCS.Export837IAsync("305");
+        }
+        private async Task toolStripButton7_ClickAsync()
+        {
+            await ExportToDHCS.Export837IAsync("306");
+        }
+        private async Task toolStripButton1_ClickAsync()
+        {
+            //load data, xml document to staging tables, professional
+            await LoadData.SubHist_P305Async();
         }
 
-        private void toolStripButton4_Click(object sender, EventArgs e)
+        private async Task toolStripButton2_ClickAsync()
         {
-            ExportToDHCS.Export837P("305");
+            //load data, xml document to staging tables, institutional
+            await LoadData.SubHist_I305Async();
         }
 
-        private void toolStripButton5_Click(object sender, EventArgs e)
+        private async Task toolStripButton3_ClickAsync()
         {
-            ExportToDHCS.Export837I("305");
+            //load xml documents, professional
+            await LoadData.SubHist_P306Async();
         }
 
-        private void toolStripButton6_Click(object sender, EventArgs e)
+        private async Task toolStripButton8_ClickAsync()
         {
-            ExportToDHCS.Export837P("306");
+            //load xml documents, institutional
+            await LoadData.SubHist_I306Async();
         }
 
-        private void toolStripButton7_Click(object sender, EventArgs e)
+        private async Task toolStripButton9_ClickAsync()
         {
-            ExportToDHCS.Export837I("306");
-        }
-
-        private void toolStripButton1_Click(object sender, EventArgs e)
-        {
-            //load data p-305
-            LoadData.SubHist_P305();
-        }
-
-        private void toolStripButton2_Click(object sender, EventArgs e)
-        {
-            //load data i-305
-            LoadData.SubHist_I305();
-        }
-
-        private void toolStripButton3_Click(object sender, EventArgs e)
-        {
-            //load data p-306
-            LoadData.SubHist_P306();
-        }
-
-        private void toolStripButton8_Click(object sender, EventArgs e)
-        {
-            //load data i-306
-            LoadData.SubHist_I306();
-        }
-
-        private void toolStripButton9_Click(object sender, EventArgs e)
-        {
-            Export_TP_Extra.Export_TP_Extra_I();
+            await Export_TP_Extra.Export_TP_Extra_IAsync();
         }
     }
 }

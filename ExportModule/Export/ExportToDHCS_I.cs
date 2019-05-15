@@ -13,7 +13,7 @@ namespace ExportModule
 {
     public static partial class ExportToDHCS
     {
-        public static void Export837I(string CountyCode)
+        public static async Task Export837IAsync(string CountyCode)
         {
             string DestinationFolder = ConfigurationManager.AppSettings["DestinationFolder"];
             SHRContext context = new SHRContext();
@@ -29,7 +29,7 @@ namespace ExportModule
                 SegmentCount = 0;
                 HLID = 1;
                 context.Database.ExecuteSqlCommand("truncate table Sub_History.ClaimTempHost");
-                List<ClaimHeader> headers = context.ClaimHeaders.Where(x => x.ClaimID.StartsWith(CountyCode) && x.ClaimType == "A").OrderBy(x => x.ID).Skip(i * 5000).Take(5000).ToList();
+                List<ClaimHeader> headers = await context.ClaimHeaders.Where(x=>x.ClaimID.StartsWith(CountyCode)&&x.ClaimType=="A").OrderBy(x => x.ID).Skip(i * 5000).Take(5000).ToListAsync();
                 if (headers.Count > 0)
                 {
                     context.Database.ExecuteSqlCommand("truncate table Sub_History.ClaimTempHost");
@@ -37,22 +37,22 @@ namespace ExportModule
                     foreach (var header in headers) tempclaims.Add(new ClaimTempHost { ClaimID = header.ClaimID });
                     context.ClaimTempHost.AddRange(tempclaims.Distinct());
                     context.SaveChanges();
-                    List<ClaimCAS> cases = context.Database.SqlQuery<ClaimCAS>("select * from Sub_History.ClaimCAS where ClaimID in (select ClaimID from Sub_history.ClaimTempHost)").ToList();
-                    List<ClaimCRC> crcs = context.Database.SqlQuery<ClaimCRC>("select * from Sub_history.ClaimCRCs where ClaimID in (select ClaimID from Sub_History.ClaimTempHost)").ToList();
-                    List<ClaimHI> his = context.Database.SqlQuery<ClaimHI>("select * from Sub_History.ClaimHIs where ClaimID in (select ClaimID from Sub_History.ClaimTempHost)").ToList();
-                    List<ClaimK3> k3s = context.Database.SqlQuery<ClaimK3>("select * from Sub_History.ClaimK3s where ClaimID in (select ClaimID from Sub_History.ClaimTempHost)").ToList();
-                    List<ClaimLineFRM> frms = context.Database.SqlQuery<ClaimLineFRM>("select * from Sub_History.ClaimLineFRMs where ClaimID in (select ClaimID from Sub_History.ClaimTempHost)").ToList();
-                    List<ClaimLineLQ> lqs = context.Database.SqlQuery<ClaimLineLQ>("select * from Sub_History.ClaimLineLQs where ClaimID in (select ClaimID from Sub_History.ClaimTempHost)").ToList();
-                    List<ClaimLineMEA> meas = context.Database.SqlQuery<ClaimLineMEA>("select * from Sub_History.ClaimLineMEAs where ClaimID in (select ClaimID from Sub_History.ClaimTempHost)").ToList();
-                    List<ClaimLineSVD> svds = context.Database.SqlQuery<ClaimLineSVD>("select * from Sub_History.ClaimLineSVDs where ClaimID in (select ClaimID from Sub_History.ClaimTempHost)").ToList();
-                    List<ClaimNte> notes = context.Database.SqlQuery<ClaimNte>("select * from Sub_History.ClaimNtes where ClaimID in (select ClaimID from Sub_History.ClaimTempHost)").ToList();
-                    List<ClaimPatient> patients = context.Database.SqlQuery<ClaimPatient>("select * from Sub_History.ClaimPatients where ClaimID in (select ClaimID from Sub_History.ClaimTempHost)").ToList();
-                    List<ClaimProvider> providers = context.Database.SqlQuery<ClaimProvider>("select * from Sub_History.ClaimProviders where ClaimID in (select ClaimID from Sub_History.ClaimTempHost)").ToList();
-                    List<ClaimPWK> pwks = context.Database.SqlQuery<ClaimPWK>("select * from Sub_History.ClaimPWKs where ClaimID in (select ClaimID from Sub_History.ClaimTempHost)").ToList();
-                    List<ClaimSBR> sbrs = context.Database.SqlQuery<ClaimSBR>("select * from Sub_History.ClaimSBRs where ClaimID in (select ClaimID from Sub_History.ClaimTempHost)").ToList();
-                    List<ClaimSecondaryIdentification> secondaryidentifications = context.Database.SqlQuery<ClaimSecondaryIdentification>("select * from Sub_History.ClaimSecondaryIdentifications where ClaimID in (select ClaimID from Sub_History.ClaimTempHost)").ToList();
-                    List<ProviderContact> providercontacts = context.Database.SqlQuery<ProviderContact>("select * from Sub_History.ProviderContacts where ClaimID in (select ClaimID from Sub_History.ClaimTempHost)").ToList();
-                    List<ServiceLine> servicelines = context.Database.SqlQuery<ServiceLine>("select * from Sub_History.ServiceLines where ClaimID in (select ClaimID from Sub_History.ClaimTempHost)").ToList();
+                    List<ClaimCAS> cases = await context.Database.SqlQuery<ClaimCAS>("select * from Sub_History.ClaimCAS where ClaimID in (select ClaimID from Sub_history.ClaimTempHost)").ToListAsync();
+                    List<ClaimCRC> crcs = await context.Database.SqlQuery<ClaimCRC>("select * from Sub_history.ClaimCRCs where ClaimID in (select ClaimID from Sub_History.ClaimTempHost)").ToListAsync();
+                    List<ClaimHI> his = await context.Database.SqlQuery<ClaimHI>("select * from Sub_History.ClaimHIs where ClaimID in (select ClaimID from Sub_History.ClaimTempHost)").ToListAsync();
+                    List<ClaimK3> k3s = await context.Database.SqlQuery<ClaimK3>("select * from Sub_History.ClaimK3s where ClaimID in (select ClaimID from Sub_History.ClaimTempHost)").ToListAsync();
+                    List<ClaimLineFRM> frms = await context.Database.SqlQuery<ClaimLineFRM>("select * from Sub_History.ClaimLineFRMs where ClaimID in (select ClaimID from Sub_History.ClaimTempHost)").ToListAsync();
+                    List<ClaimLineLQ> lqs = await context.Database.SqlQuery<ClaimLineLQ>("select * from Sub_History.ClaimLineLQs where ClaimID in (select ClaimID from Sub_History.ClaimTempHost)").ToListAsync();
+                    List<ClaimLineMEA> meas = await context.Database.SqlQuery<ClaimLineMEA>("select * from Sub_History.ClaimLineMEAs where ClaimID in (select ClaimID from Sub_History.ClaimTempHost)").ToListAsync();
+                    List<ClaimLineSVD> svds = await context.Database.SqlQuery<ClaimLineSVD>("select * from Sub_History.ClaimLineSVDs where ClaimID in (select ClaimID from Sub_History.ClaimTempHost)").ToListAsync();
+                    List<ClaimNte> notes = await context.Database.SqlQuery<ClaimNte>("select * from Sub_History.ClaimNtes where ClaimID in (select ClaimID from Sub_History.ClaimTempHost)").ToListAsync();
+                    List<ClaimPatient> patients = await context.Database.SqlQuery<ClaimPatient>("select * from Sub_History.ClaimPatients where ClaimID in (select ClaimID from Sub_History.ClaimTempHost)").ToListAsync();
+                    List<ClaimProvider> providers = await context.Database.SqlQuery<ClaimProvider>("select * from Sub_History.ClaimProviders where ClaimID in (select ClaimID from Sub_History.ClaimTempHost)").ToListAsync();
+                    List<ClaimPWK> pwks = await context.Database.SqlQuery<ClaimPWK>("select * from Sub_History.ClaimPWKs where ClaimID in (select ClaimID from Sub_History.ClaimTempHost)").ToListAsync();
+                    List<ClaimSBR> sbrs = await context.Database.SqlQuery<ClaimSBR>("select * from Sub_History.ClaimSBRs where ClaimID in (select ClaimID from Sub_History.ClaimTempHost)").ToListAsync();
+                    List<ClaimSecondaryIdentification> secondaryidentifications = await context.Database.SqlQuery<ClaimSecondaryIdentification>("select * from Sub_History.ClaimSecondaryIdentifications where ClaimID in (select ClaimID from Sub_History.ClaimTempHost)").ToListAsync();
+                    List<ProviderContact> providercontacts = await context.Database.SqlQuery<ProviderContact>("select * from Sub_History.ProviderContacts where ClaimID in (select ClaimID from Sub_History.ClaimTempHost)").ToListAsync();
+                    List<ServiceLine> servicelines = await context.Database.SqlQuery<ServiceLine>("select * from Sub_History.ServiceLines where ClaimID in (select ClaimID from Sub_History.ClaimTempHost)").ToListAsync();
 
                     string transactionDate = DateTime.Today.ToString("yyyyMMdd");
                     string transactionTime = DateTime.Now.ToString("HHmm");
@@ -654,7 +654,7 @@ namespace ExportModule
                             SegmentCount++;
                         }
                         claimprovider = claimproviders.Where(x => x.LoopName == "2310A").FirstOrDefault();
-                        if (claimprovider != null)
+                        if (claimprovider!=null)
                         {
                             nm1 = new NM1();
                             nm1.NameQualifier = claimprovider.ProviderQualifier;
@@ -1223,42 +1223,42 @@ namespace ExportModule
                                 }
                             }
                         }
-                        foreach (ServiceLine line in claimlines.OrderBy(x => int.Parse(x.ServiceLineNumber)))
-                        {
-                            LX lx = new LX();
-                            lx.ServiceLineNumber = line.ServiceLineNumber;
-                            sb.Append(lx.ToX12String());
-                            SegmentCount++;
-                            SV2 sv2 = new SV2();
-                            sv2.RevenueCode = line.RevenueCode;
-                            sv2.ServiceIDQualifier = line.ServiceIDQualifier;
-                            sv2.ProcedureCode = line.ProcedureCode;
-                            sv2.ProcedureModifier1 = line.ProcedureModifier1;
-                            sv2.ProcedureModifier2 = line.ProcedureModifier2;
-                            sv2.ProcedureModifier3 = line.ProcedureModifier3;
-                            sv2.ProcedureModifier4 = line.ProcedureModifier4;
-                            sv2.ProcedureDescription = line.ProcedureDescription;
-                            sv2.LineItemChargeAmount = line.LineItemChargeAmount;
-                            sv2.LineItemUnit = line.LineItemUnit;
-                            sv2.ServiceUnitQuantity = line.ServiceUnitQuantity;
-                            sv2.LineItemDeniedChargeAmount = line.LineItemDeniedChargeAmount;
-                            sb.Append(sv2.ToX12String());
-                            SegmentCount++;
-                            if (claimpwks.Where(x => x.ServiceLineNumber == line.ServiceLineNumber).Count() > 0)
-                            {
-                                PWK pwk = new PWK();
-                                foreach (ClaimPWK claimpwk in claimpwks.Where(x => x.ServiceLineNumber == line.ServiceLineNumber))
+                                foreach (ServiceLine line in claimlines.OrderBy(x=>int.Parse(x.ServiceLineNumber )))
                                 {
-                                    PWKItem pwkitem = new PWKItem();
-                                    pwkitem.ReportTypeCode = claimpwk.ReportTypeCode;
-                                    pwkitem.ReportTransmissionCode = claimpwk.ReportTransmissionCode;
-                                    pwkitem.AttachmentControlNumber = claimpwk.AttachmentControlNumber;
-                                    pwk.Pwks.Add(pwkitem);
-                                }
-                                sb.Append(pwk.ToX12String());
-                                SegmentCount += pwk.Pwks.Count;
-                            }
-                            if (!string.IsNullOrEmpty(line.ServiceFromDate) && !string.IsNullOrEmpty(line.ServiceToDate))
+                                    LX lx = new LX();
+                                    lx.ServiceLineNumber = line.ServiceLineNumber;
+                                    sb.Append(lx.ToX12String());
+                                    SegmentCount++;
+                                    SV2 sv2 = new SV2();
+                                    sv2.RevenueCode = line.RevenueCode;
+                                    sv2.ServiceIDQualifier = line.ServiceIDQualifier;
+                                    sv2.ProcedureCode = line.ProcedureCode;
+                                    sv2.ProcedureModifier1 = line.ProcedureModifier1;
+                                    sv2.ProcedureModifier2 = line.ProcedureModifier2;
+                                    sv2.ProcedureModifier3 = line.ProcedureModifier3;
+                                    sv2.ProcedureModifier4 = line.ProcedureModifier4;
+                                    sv2.ProcedureDescription = line.ProcedureDescription;
+                                    sv2.LineItemChargeAmount = line.LineItemChargeAmount;
+                                    sv2.LineItemUnit = line.LineItemUnit;
+                                    sv2.ServiceUnitQuantity = line.ServiceUnitQuantity;
+                                    sv2.LineItemDeniedChargeAmount = line.LineItemDeniedChargeAmount;
+                                    sb.Append(sv2.ToX12String());
+                                    SegmentCount++;
+                                    if (claimpwks.Where(x => x.ServiceLineNumber == line.ServiceLineNumber).Count() > 0)
+                                    {
+                                        PWK pwk = new PWK();
+                                        foreach (ClaimPWK claimpwk in claimpwks.Where(x => x.ServiceLineNumber == line.ServiceLineNumber))
+                                        {
+                                            PWKItem pwkitem = new PWKItem();
+                                            pwkitem.ReportTypeCode = claimpwk.ReportTypeCode;
+                                            pwkitem.ReportTransmissionCode = claimpwk.ReportTransmissionCode;
+                                            pwkitem.AttachmentControlNumber = claimpwk.AttachmentControlNumber;
+                                            pwk.Pwks.Add(pwkitem);
+                                        }
+                                        sb.Append(pwk.ToX12String());
+                                        SegmentCount += pwk.Pwks.Count;
+                                    }
+                            if (!string.IsNullOrEmpty(line.ServiceFromDate) && !string.IsNullOrEmpty(line.ServiceToDate ))
                             {
                                 DTP dtp = new DTP();
                                 dtp.DateCode = "472";
@@ -1269,224 +1269,224 @@ namespace ExportModule
                                 SegmentCount++;
                             }
                             if (claimsis.Where(x => x.LoopName == "2400" && x.ServiceLineNumber == line.ServiceLineNumber).Count() > 0)
-                            {
-                                rref = new REF();
-                                foreach (ClaimSecondaryIdentification si in claimsis.Where(x => x.LoopName == "2400" && x.ServiceLineNumber == line.ServiceLineNumber))
-                                {
-                                    refitem = new REFItem();
-                                    refitem.ProviderQualifier = si.ProviderQualifier;
-                                    refitem.ProviderID = si.ProviderID;
-                                    refitem.OtherPayerPrimaryIDentification = si.OtherPayerPrimaryIDentification;
-                                    rref.Refs.Add(refitem);
-                                }
-                                sb.Append(rref.ToX12String());
-                                SegmentCount += rref.Refs.Count;
-                            }
-                            if (!string.IsNullOrEmpty(line.ServiceTaxAmount))
-                            {
-                                AMT amt = new AMT();
-                                amt.AmountQualifier = "GT";
-                                amt.Amount = line.ServiceTaxAmount;
-                                sb.Append(amt.ToX12String());
-                                SegmentCount++;
-                            }
-                            if (!string.IsNullOrEmpty(line.FacilityTaxAmount))
-                            {
-                                AMT amt = new AMT();
-                                amt.AmountQualifier = "N8";
-                                amt.Amount = line.FacilityTaxAmount;
-                                sb.Append(amt.ToX12String());
-                                SegmentCount++;
-                            }
-                            if (claimnotes.Where(x => x.ServiceLineNumber == line.ServiceLineNumber).Count() > 0)
-                            {
-                                NTE note = new NTE();
-                                note.NoteCode = claimnotes.Where(x => x.ServiceLineNumber == line.ServiceLineNumber).First().NoteCode;
-                                note.NoteText = claimnotes.Where(x => x.ServiceLineNumber == line.ServiceLineNumber).First().NoteText;
-                                sb.Append(note.ToX12String());
-                                SegmentCount++;
-                            }
-                            if (!string.IsNullOrEmpty(line.PricingMethodology) && !string.IsNullOrEmpty(line.RepricedAllowedAmount))
-                            {
-                                HCP hcp = new HCP();
-                                hcp.PricingMethodology = line.PricingMethodology;
-                                hcp.RepricedAllowedAmount = line.RepricedAllowedAmount;
-                                hcp.RepricedSavingAmount = line.RepricedSavingAmount;
-                                hcp.RepricingOrganizationID = line.RepricingOrganizationIdentifier;
-                                hcp.RepricingRate = line.RepricingRate;
-                                hcp.RepricedGroupCode = line.RepricedAmbulatoryPatientGroupCode;
-                                hcp.RepricedGroupAmount = line.RepricedAmbulatoryPatientGroupAmount;
-                                hcp.RepricingUnit = line.RepricingUnit;
-                                hcp.RepricingQuantity = line.RepricingQuantity;
-                                hcp.RejectReasonCode = line.RejectReasonCode;
-                                hcp.PolicyComplianceCode = line.PolicyComplianceCode;
-                                hcp.ExceptionCode = line.ExceptionCode;
-                                sb.Append(hcp.ToX12String());
-                                SegmentCount++;
-                            }
-                            if (!string.IsNullOrEmpty(line.LINQualifier) && !string.IsNullOrEmpty(line.NationalDrugCode))
-                            {
-                                LIN lin = new LIN();
-                                lin.LINQualifier = line.LINQualifier;
-                                lin.NationalDrugCode = line.NationalDrugCode;
-                                sb.Append(lin.ToX12String());
-                                SegmentCount++;
-                            }
-                            if (!string.IsNullOrEmpty(line.DrugQuantity) && !string.IsNullOrEmpty(line.DrugQualifier))
-                            {
-                                CTP ctp = new CTP();
-                                ctp.DrugQuantity = line.DrugQuantity;
-                                ctp.DrugQualifier = line.DrugQualifier;
-                                sb.Append(ctp.ToX12String());
-                                SegmentCount++;
-                            }
-                            if (claimsis.Where(x => x.LoopName == "2410" && x.ServiceLineNumber == line.ServiceLineNumber).Count() > 0)
-                            {
-                                claimsi = claimsis.Where(x => x.LoopName == "2410" && x.ServiceLineNumber == line.ServiceLineNumber).FirstOrDefault();
-                                rref = new REF();
-                                refitem = new REFItem();
-                                refitem.ProviderQualifier = claimsi.ProviderQualifier;
-                                refitem.ProviderID = claimsi.ProviderID;
-                                rref.Refs.Add(refitem);
-                                sb.Append(rref.ToX12String());
-                                SegmentCount++;
-                            }
-                            claimprovider = claimproviders.Where(x => x.LoopName == "2420A" && x.ServiceLineNumber == line.ServiceLineNumber).FirstOrDefault();
-                            if (claimprovider != null)
-                            {
-                                nm1 = new NM1();
-                                nm1.NameQualifier = claimprovider.ProviderQualifier;
-                                nm1.NameType = string.IsNullOrEmpty(claimprovider.ProviderFirstName) ? "2" : "1";
-                                nm1.LastName = claimprovider.ProviderLastName;
-                                nm1.FirstName = claimprovider.ProviderFirstName;
-                                nm1.MiddleName = claimprovider.ProviderMiddle;
-                                nm1.Suffix = claimprovider.ProviderSuffix;
-                                nm1.IDQualifer = claimprovider.ProviderIDQualifier;
-                                nm1.IDCode = claimprovider.ProviderID;
-                                sb.Append(nm1.ToX12String());
-                                SegmentCount++;
-                                if (claimsis.Where(x => x.LoopName == "2420A" && x.ServiceLineNumber == line.ServiceLineNumber).Count() > 0)
-                                {
-                                    rref = new REF();
-                                    foreach (ClaimSecondaryIdentification si in claimsis.Where(x => x.LoopName == "2420A" && x.ServiceLineNumber == line.ServiceLineNumber))
                                     {
-                                        refitem = new REFItem();
-                                        refitem.ProviderQualifier = si.ProviderQualifier;
-                                        refitem.ProviderID = si.ProviderID;
-                                        refitem.OtherPayerPrimaryIDentification = si.OtherPayerPrimaryIDentification;
-                                        rref.Refs.Add(refitem);
+                                        rref = new REF();
+                                        foreach (ClaimSecondaryIdentification si in claimsis.Where(x => x.LoopName == "2400" && x.ServiceLineNumber == line.ServiceLineNumber))
+                                        {
+                                            refitem = new REFItem();
+                                            refitem.ProviderQualifier = si.ProviderQualifier;
+                                            refitem.ProviderID = si.ProviderID;
+                                            refitem.OtherPayerPrimaryIDentification = si.OtherPayerPrimaryIDentification;
+                                            rref.Refs.Add(refitem);
+                                        }
+                                        sb.Append(rref.ToX12String());
+                                        SegmentCount += rref.Refs.Count;
                                     }
-                                    sb.Append(rref.ToX12String());
-                                    SegmentCount += rref.Refs.Count;
-                                }
-                            }
-                            claimprovider = claimproviders.Where(x => x.LoopName == "2420B" && x.ServiceLineNumber == line.ServiceLineNumber).FirstOrDefault();
-                            if (claimprovider != null)
-                            {
-                                nm1 = new NM1();
-                                nm1.NameQualifier = claimprovider.ProviderQualifier;
-                                nm1.NameType = string.IsNullOrEmpty(claimprovider.ProviderFirstName) ? "2" : "1";
-                                nm1.LastName = claimprovider.ProviderLastName;
-                                nm1.FirstName = claimprovider.ProviderFirstName;
-                                nm1.MiddleName = claimprovider.ProviderMiddle;
-                                nm1.Suffix = claimprovider.ProviderSuffix;
-                                nm1.IDQualifer = claimprovider.ProviderIDQualifier;
-                                nm1.IDCode = claimprovider.ProviderID;
-                                sb.Append(nm1.ToX12String());
-                                SegmentCount++;
-                                if (claimsis.Where(x => x.LoopName == "2420B" && x.ServiceLineNumber == line.ServiceLineNumber).Count() > 0)
-                                {
-                                    rref = new REF();
-                                    foreach (ClaimSecondaryIdentification si in claimsis.Where(x => x.LoopName == "2420B" && x.ServiceLineNumber == line.ServiceLineNumber))
+                                    if (!string.IsNullOrEmpty(line.ServiceTaxAmount))
                                     {
-                                        refitem = new REFItem();
-                                        refitem.ProviderQualifier = si.ProviderQualifier;
-                                        refitem.ProviderID = si.ProviderID;
-                                        refitem.OtherPayerPrimaryIDentification = si.OtherPayerPrimaryIDentification;
-                                        rref.Refs.Add(refitem);
+                                        AMT amt = new AMT();
+                                        amt.AmountQualifier = "GT";
+                                        amt.Amount = line.ServiceTaxAmount;
+                                        sb.Append(amt.ToX12String());
+                                        SegmentCount++;
                                     }
-                                    sb.Append(rref.ToX12String());
-                                    SegmentCount += rref.Refs.Count;
-                                }
-                            }
-                            claimprovider = claimproviders.Where(x => x.LoopName == "2420C" && x.ServiceLineNumber == line.ServiceLineNumber).FirstOrDefault();
-                            if (claimprovider != null)
-                            {
-                                nm1 = new NM1();
-                                nm1.NameQualifier = claimprovider.ProviderQualifier;
-                                nm1.NameType = string.IsNullOrEmpty(claimprovider.ProviderFirstName) ? "2" : "1";
-                                nm1.LastName = claimprovider.ProviderLastName;
-                                nm1.FirstName = claimprovider.ProviderFirstName;
-                                nm1.MiddleName = claimprovider.ProviderMiddle;
-                                nm1.Suffix = claimprovider.ProviderSuffix;
-                                nm1.IDQualifer = claimprovider.ProviderIDQualifier;
-                                nm1.IDCode = claimprovider.ProviderID;
-                                sb.Append(nm1.ToX12String());
-                                SegmentCount++;
-                                if (claimsis.Where(x => x.LoopName == "2420C" && x.ServiceLineNumber == line.ServiceLineNumber).Count() > 0)
-                                {
-                                    rref = new REF();
-                                    foreach (ClaimSecondaryIdentification si in claimsis.Where(x => x.LoopName == "2420C" && x.ServiceLineNumber == line.ServiceLineNumber))
+                                    if (!string.IsNullOrEmpty(line.FacilityTaxAmount))
                                     {
-                                        refitem = new REFItem();
-                                        refitem.ProviderQualifier = si.ProviderQualifier;
-                                        refitem.ProviderID = si.ProviderID;
-                                        refitem.OtherPayerPrimaryIDentification = si.OtherPayerPrimaryIDentification;
-                                        rref.Refs.Add(refitem);
+                                        AMT amt = new AMT();
+                                        amt.AmountQualifier = "N8";
+                                        amt.Amount = line.FacilityTaxAmount;
+                                        sb.Append(amt.ToX12String());
+                                        SegmentCount++;
                                     }
-                                    sb.Append(rref.ToX12String());
-                                    SegmentCount += rref.Refs.Count;
-                                }
-                            }
-                            claimprovider = claimproviders.Where(x => x.LoopName == "2420D" && x.ServiceLineNumber == line.ServiceLineNumber).FirstOrDefault();
-                            if (claimprovider != null)
-                            {
-                                nm1 = new NM1();
-                                nm1.NameQualifier = claimprovider.ProviderQualifier;
-                                nm1.NameType = string.IsNullOrEmpty(claimprovider.ProviderFirstName) ? "2" : "1";
-                                nm1.LastName = claimprovider.ProviderLastName;
-                                nm1.FirstName = claimprovider.ProviderFirstName;
-                                nm1.MiddleName = claimprovider.ProviderMiddle;
-                                nm1.Suffix = claimprovider.ProviderSuffix;
-                                nm1.IDQualifer = claimprovider.ProviderIDQualifier;
-                                nm1.IDCode = claimprovider.ProviderID;
-                                sb.Append(nm1.ToX12String());
-                                SegmentCount++;
-                                if (claimsis.Where(x => x.LoopName == "2420D" && x.ServiceLineNumber == line.ServiceLineNumber).Count() > 0)
-                                {
-                                    rref = new REF();
-                                    foreach (ClaimSecondaryIdentification si in claimsis.Where(x => x.LoopName == "2420D" && x.ServiceLineNumber == line.ServiceLineNumber))
+                                    if (claimnotes.Where(x => x.ServiceLineNumber == line.ServiceLineNumber).Count() > 0)
                                     {
-                                        refitem = new REFItem();
-                                        refitem.ProviderQualifier = si.ProviderQualifier;
-                                        refitem.ProviderID = si.ProviderID;
-                                        refitem.OtherPayerPrimaryIDentification = si.OtherPayerPrimaryIDentification;
-                                        rref.Refs.Add(refitem);
+                                        NTE note = new NTE();
+                                        note.NoteCode = claimnotes.Where(x => x.ServiceLineNumber == line.ServiceLineNumber).First().NoteCode;
+                                        note.NoteText = claimnotes.Where(x => x.ServiceLineNumber == line.ServiceLineNumber).First().NoteText;
+                                        sb.Append(note.ToX12String());
+                                        SegmentCount++;
                                     }
-                                    sb.Append(rref.ToX12String());
-                                    SegmentCount += rref.Refs.Count;
-                                }
-                            }
-                            if (claimsvds.Where(x => x.ServiceLineNumber == line.ServiceLineNumber).Count() > 0)
-                            {
-                                foreach (ClaimLineSVD claimlinesvd in claimsvds.Where(x => x.ServiceLineNumber == line.ServiceLineNumber))
-                                {
-                                    SVD svd = new SVD();
-                                    svd.OtherPayerPrimaryIdentifier = claimlinesvd.OtherPayerPrimaryIdentifier;
-                                    svd.ServiceLinePaidAmount = claimlinesvd.ServiceLinePaidAmount;
-                                    svd.ServiceQualifier = claimlinesvd.ServiceQualifier;
-                                    svd.ProcedureCode = claimlinesvd.ProcedureCode;
-                                    svd.ProcedureModifier1 = claimlinesvd.ProcedureModifier1;
-                                    svd.ProcedureModifier2 = claimlinesvd.ProcedureModifier2;
-                                    svd.ProcedureModifier3 = claimlinesvd.ProcedureModifier3;
-                                    svd.ProcedureModifier4 = claimlinesvd.ProcedureModifier4;
-                                    svd.ProcedureDescription = claimlinesvd.ProcedureDescription;
-                                    svd.PaidServiceUnitCount = claimlinesvd.PaidServiceUnitCount;
-                                    svd.BundledLineNumber = claimlinesvd.BundledLineNumber;
-                                    svd.ServiceLineRevenueCode = claimlinesvd.ServiceLineRevenueCode;
-                                    sb.Append(svd.ToX12String());
-                                    SegmentCount++;
-                                    List<ClaimCAS> loopcases = claimcases.Where(x => x.ServiceLineNumber == line.ServiceLineNumber && x.SubscriberSequenceNumber == claimlinesvd.RepeatSequence).ToList();
+                                    if (!string.IsNullOrEmpty(line.PricingMethodology) && !string.IsNullOrEmpty(line.RepricedAllowedAmount))
+                                    {
+                                        HCP hcp = new HCP();
+                                        hcp.PricingMethodology = line.PricingMethodology;
+                                        hcp.RepricedAllowedAmount = line.RepricedAllowedAmount;
+                                        hcp.RepricedSavingAmount = line.RepricedSavingAmount;
+                                        hcp.RepricingOrganizationID = line.RepricingOrganizationIdentifier;
+                                        hcp.RepricingRate = line.RepricingRate;
+                                        hcp.RepricedGroupCode = line.RepricedAmbulatoryPatientGroupCode;
+                                        hcp.RepricedGroupAmount = line.RepricedAmbulatoryPatientGroupAmount;
+                                        hcp.RepricingUnit = line.RepricingUnit;
+                                        hcp.RepricingQuantity = line.RepricingQuantity;
+                                        hcp.RejectReasonCode = line.RejectReasonCode;
+                                        hcp.PolicyComplianceCode = line.PolicyComplianceCode;
+                                        hcp.ExceptionCode = line.ExceptionCode;
+                                        sb.Append(hcp.ToX12String());
+                                        SegmentCount++;
+                                    }
+                                    if (!string.IsNullOrEmpty(line.LINQualifier) && !string.IsNullOrEmpty(line.NationalDrugCode))
+                                    {
+                                        LIN lin = new LIN();
+                                        lin.LINQualifier = line.LINQualifier;
+                                        lin.NationalDrugCode = line.NationalDrugCode;
+                                        sb.Append(lin.ToX12String());
+                                        SegmentCount++;
+                                    }
+                                    if (!string.IsNullOrEmpty(line.DrugQuantity) && !string.IsNullOrEmpty(line.DrugQualifier))
+                                    {
+                                        CTP ctp = new CTP();
+                                        ctp.DrugQuantity = line.DrugQuantity;
+                                        ctp.DrugQualifier = line.DrugQualifier;
+                                        sb.Append(ctp.ToX12String());
+                                        SegmentCount++;
+                                    }
+                                    if (claimsis.Where(x => x.LoopName == "2410" && x.ServiceLineNumber == line.ServiceLineNumber).Count() > 0)
+                                    {
+                                        claimsi = claimsis.Where(x => x.LoopName == "2410" && x.ServiceLineNumber == line.ServiceLineNumber).FirstOrDefault();
+                                        rref = new REF();
+                                        refitem = new REFItem();
+                                        refitem.ProviderQualifier = claimsi.ProviderQualifier;
+                                        refitem.ProviderID = claimsi.ProviderID;
+                                        rref.Refs.Add(refitem);
+                                        sb.Append(rref.ToX12String());
+                                        SegmentCount++;
+                                    }
+                                    claimprovider = claimproviders.Where(x => x.LoopName == "2420A" && x.ServiceLineNumber == line.ServiceLineNumber).FirstOrDefault();
+                                    if (claimprovider != null)
+                                    {
+                                        nm1 = new NM1();
+                                        nm1.NameQualifier = claimprovider.ProviderQualifier;
+                                        nm1.NameType = string.IsNullOrEmpty(claimprovider.ProviderFirstName) ? "2" : "1";
+                                        nm1.LastName = claimprovider.ProviderLastName;
+                                        nm1.FirstName = claimprovider.ProviderFirstName;
+                                        nm1.MiddleName = claimprovider.ProviderMiddle;
+                                        nm1.Suffix = claimprovider.ProviderSuffix;
+                                        nm1.IDQualifer = claimprovider.ProviderIDQualifier;
+                                        nm1.IDCode = claimprovider.ProviderID;
+                                        sb.Append(nm1.ToX12String());
+                                        SegmentCount++;
+                                        if (claimsis.Where(x => x.LoopName == "2420A" && x.ServiceLineNumber == line.ServiceLineNumber).Count() > 0)
+                                        {
+                                            rref = new REF();
+                                            foreach (ClaimSecondaryIdentification si in claimsis.Where(x => x.LoopName == "2420A" && x.ServiceLineNumber == line.ServiceLineNumber))
+                                            {
+                                                refitem = new REFItem();
+                                                refitem.ProviderQualifier = si.ProviderQualifier;
+                                                refitem.ProviderID = si.ProviderID;
+                                                refitem.OtherPayerPrimaryIDentification = si.OtherPayerPrimaryIDentification;
+                                                rref.Refs.Add(refitem);
+                                            }
+                                            sb.Append(rref.ToX12String());
+                                            SegmentCount += rref.Refs.Count;
+                                        }
+                                    }
+                                    claimprovider = claimproviders.Where(x => x.LoopName == "2420B" && x.ServiceLineNumber == line.ServiceLineNumber).FirstOrDefault();
+                                    if (claimprovider != null)
+                                    {
+                                        nm1 = new NM1();
+                                        nm1.NameQualifier = claimprovider.ProviderQualifier;
+                                        nm1.NameType = string.IsNullOrEmpty(claimprovider.ProviderFirstName) ? "2" : "1";
+                                        nm1.LastName = claimprovider.ProviderLastName;
+                                        nm1.FirstName = claimprovider.ProviderFirstName;
+                                        nm1.MiddleName = claimprovider.ProviderMiddle;
+                                        nm1.Suffix = claimprovider.ProviderSuffix;
+                                        nm1.IDQualifer = claimprovider.ProviderIDQualifier;
+                                        nm1.IDCode = claimprovider.ProviderID;
+                                        sb.Append(nm1.ToX12String());
+                                        SegmentCount++;
+                                        if (claimsis.Where(x => x.LoopName == "2420B" && x.ServiceLineNumber == line.ServiceLineNumber).Count() > 0)
+                                        {
+                                            rref = new REF();
+                                            foreach (ClaimSecondaryIdentification si in claimsis.Where(x => x.LoopName == "2420B" && x.ServiceLineNumber == line.ServiceLineNumber))
+                                            {
+                                                refitem = new REFItem();
+                                                refitem.ProviderQualifier = si.ProviderQualifier;
+                                                refitem.ProviderID = si.ProviderID;
+                                                refitem.OtherPayerPrimaryIDentification = si.OtherPayerPrimaryIDentification;
+                                                rref.Refs.Add(refitem);
+                                            }
+                                            sb.Append(rref.ToX12String());
+                                            SegmentCount += rref.Refs.Count;
+                                        }
+                                    }
+                                    claimprovider = claimproviders.Where(x => x.LoopName == "2420C" && x.ServiceLineNumber == line.ServiceLineNumber).FirstOrDefault();
+                                    if (claimprovider != null)
+                                    {
+                                        nm1 = new NM1();
+                                        nm1.NameQualifier = claimprovider.ProviderQualifier;
+                                        nm1.NameType = string.IsNullOrEmpty(claimprovider.ProviderFirstName) ? "2" : "1";
+                                        nm1.LastName = claimprovider.ProviderLastName;
+                                        nm1.FirstName = claimprovider.ProviderFirstName;
+                                        nm1.MiddleName = claimprovider.ProviderMiddle;
+                                        nm1.Suffix = claimprovider.ProviderSuffix;
+                                        nm1.IDQualifer = claimprovider.ProviderIDQualifier;
+                                        nm1.IDCode = claimprovider.ProviderID;
+                                        sb.Append(nm1.ToX12String());
+                                        SegmentCount++;
+                                        if (claimsis.Where(x => x.LoopName == "2420C" && x.ServiceLineNumber == line.ServiceLineNumber).Count() > 0)
+                                        {
+                                            rref = new REF();
+                                            foreach (ClaimSecondaryIdentification si in claimsis.Where(x => x.LoopName == "2420C" && x.ServiceLineNumber == line.ServiceLineNumber))
+                                            {
+                                                refitem = new REFItem();
+                                                refitem.ProviderQualifier = si.ProviderQualifier;
+                                                refitem.ProviderID = si.ProviderID;
+                                                refitem.OtherPayerPrimaryIDentification = si.OtherPayerPrimaryIDentification;
+                                                rref.Refs.Add(refitem);
+                                            }
+                                            sb.Append(rref.ToX12String());
+                                            SegmentCount += rref.Refs.Count;
+                                        }
+                                    }
+                                    claimprovider = claimproviders.Where(x => x.LoopName == "2420D" && x.ServiceLineNumber == line.ServiceLineNumber).FirstOrDefault();
+                                    if (claimprovider != null)
+                                    {
+                                        nm1 = new NM1();
+                                        nm1.NameQualifier = claimprovider.ProviderQualifier;
+                                        nm1.NameType = string.IsNullOrEmpty(claimprovider.ProviderFirstName) ? "2" : "1";
+                                        nm1.LastName = claimprovider.ProviderLastName;
+                                        nm1.FirstName = claimprovider.ProviderFirstName;
+                                        nm1.MiddleName = claimprovider.ProviderMiddle;
+                                        nm1.Suffix = claimprovider.ProviderSuffix;
+                                        nm1.IDQualifer = claimprovider.ProviderIDQualifier;
+                                        nm1.IDCode = claimprovider.ProviderID;
+                                        sb.Append(nm1.ToX12String());
+                                        SegmentCount++;
+                                        if (claimsis.Where(x => x.LoopName == "2420D" && x.ServiceLineNumber == line.ServiceLineNumber).Count() > 0)
+                                        {
+                                            rref = new REF();
+                                            foreach (ClaimSecondaryIdentification si in claimsis.Where(x => x.LoopName == "2420D" && x.ServiceLineNumber == line.ServiceLineNumber))
+                                            {
+                                                refitem = new REFItem();
+                                                refitem.ProviderQualifier = si.ProviderQualifier;
+                                                refitem.ProviderID = si.ProviderID;
+                                                refitem.OtherPayerPrimaryIDentification = si.OtherPayerPrimaryIDentification;
+                                                rref.Refs.Add(refitem);
+                                            }
+                                            sb.Append(rref.ToX12String());
+                                            SegmentCount += rref.Refs.Count;
+                                        }
+                                    }
+                                    if (claimsvds.Where(x => x.ServiceLineNumber == line.ServiceLineNumber).Count() > 0)
+                                    {
+                                        foreach (ClaimLineSVD claimlinesvd in claimsvds.Where(x => x.ServiceLineNumber == line.ServiceLineNumber))
+                                        {
+                                            SVD svd = new SVD();
+                                            svd.OtherPayerPrimaryIdentifier = claimlinesvd.OtherPayerPrimaryIdentifier;
+                                            svd.ServiceLinePaidAmount = claimlinesvd.ServiceLinePaidAmount;
+                                            svd.ServiceQualifier = claimlinesvd.ServiceQualifier;
+                                            svd.ProcedureCode = claimlinesvd.ProcedureCode;
+                                            svd.ProcedureModifier1 = claimlinesvd.ProcedureModifier1;
+                                            svd.ProcedureModifier2 = claimlinesvd.ProcedureModifier2;
+                                            svd.ProcedureModifier3 = claimlinesvd.ProcedureModifier3;
+                                            svd.ProcedureModifier4 = claimlinesvd.ProcedureModifier4;
+                                            svd.ProcedureDescription = claimlinesvd.ProcedureDescription;
+                                            svd.PaidServiceUnitCount = claimlinesvd.PaidServiceUnitCount;
+                                            svd.BundledLineNumber = claimlinesvd.BundledLineNumber;
+                                            svd.ServiceLineRevenueCode = claimlinesvd.ServiceLineRevenueCode;
+                                            sb.Append(svd.ToX12String());
+                                            SegmentCount++;
+                                            List<ClaimCAS> loopcases = claimcases.Where(x => x.ServiceLineNumber == line.ServiceLineNumber && x.SubscriberSequenceNumber == claimlinesvd.RepeatSequence).ToList();
                                     if (loopcases.Count > 0)
                                     {
                                         foreach (string groupCode in loopcases.Select(x => x.GroupCode).Distinct())
@@ -1535,23 +1535,23 @@ namespace ExportModule
                                             }
                                         }
                                     }
-                                    DTP dtp = new DTP();
-                                    dtp.DateCode = "573";
-                                    dtp.DateQualifier = "D8";
-                                    dtp.StartDate = claimlinesvd.AdjudicationDate;
-                                    sb.Append(dtp.ToX12String());
-                                    SegmentCount++;
-                                    if (!string.IsNullOrEmpty(claimlinesvd.ReaminingPatientLiabilityAmount))
-                                    {
-                                        AMT amt = new AMT();
-                                        amt.AmountQualifier = "EAF";
-                                        amt.Amount = claimlinesvd.ReaminingPatientLiabilityAmount;
-                                        sb.Append(amt.ToX12String());
-                                        SegmentCount++;
+                                            DTP dtp = new DTP();
+                                            dtp.DateCode = "573";
+                                            dtp.DateQualifier = "D8";
+                                            dtp.StartDate = claimlinesvd.AdjudicationDate;
+                                            sb.Append(dtp.ToX12String());
+                                            SegmentCount++;
+                                            if (!string.IsNullOrEmpty(claimlinesvd.ReaminingPatientLiabilityAmount))
+                                            {
+                                                AMT amt = new AMT();
+                                                amt.AmountQualifier = "EAF";
+                                                amt.Amount = claimlinesvd.ReaminingPatientLiabilityAmount;
+                                                sb.Append(amt.ToX12String());
+                                                SegmentCount++;
+                                            }
+                                        }
                                     }
                                 }
-                            }
-                        }
                     }
                     SE se = new SE();
                     SegmentCount++;

@@ -32,13 +32,13 @@ namespace ExportModule
                 }
             }
         }
-        public static void SubHist_P305()
+        public static async Task SubHist_P305Async()
         {
             Claim claim;
             List<Claim> claims = new List<Claim>();
             var context = new SHRContext();
             //StringBuilder sb = new StringBuilder();
-            foreach (Hipaa_XML hipaaclaim in context.Hipaa_XML.Where(x => x.ClaimType == "P"))
+            foreach (Hipaa_XML hipaaclaim in context.Hipaa_XML.Where(x=>x.ClaimType=="P"))
             {
 
                 XDocument xdoc = XDocument.Parse(hipaaclaim.ClaimHipaaXML);
@@ -542,7 +542,7 @@ namespace ExportModule
                         provider.ServiceLineNumber = "0";
                         provider.LoopName = "2310A";
                         provider.RepeatSequence = (claim.Providers.Count + 1).ToString();
-                        foreach (XElement ele in referProv.Descendants(ns + "NM1_ReferringProviderName").Descendants())
+                        foreach (XElement ele in referProv.Descendants(ns+ "NM1_ReferringProviderName").Descendants())
                         {
                             if (ele.Name.ToString().StartsWith("NM101")) provider.ProviderQualifier = ele.Value;
                             if (ele.Name.ToString().StartsWith("NM103")) provider.ProviderLastName = ele.Value;
@@ -1065,7 +1065,7 @@ namespace ExportModule
                         }
                         claim.Providers.Add(provider);
                     }
-                    XElement loop2420E = loop2400.Descendants(ns + "NM1_SubLoop_6").Descendants(ns + "TS837_2420E_Loop").FirstOrDefault();
+                    XElement loop2420E = loop2400.Descendants(ns+"NM1_SubLoop_6").Descendants(ns + "TS837_2420E_Loop").FirstOrDefault();
                     if (loop2420E != null)
                     {
                         provider = new ClaimProvider();
@@ -1370,7 +1370,7 @@ namespace ExportModule
             claimlinesvds.Clear();
             claimcases.Clear();
         }
-        public static void SubHist_I305()
+        public static async Task SubHist_I305Async()
         {
             //var context = new SHRContext();
             //HashSet<string> hs = new HashSet<string>();
@@ -1388,7 +1388,7 @@ namespace ExportModule
             List<Claim> claims = new List<Claim>();
             var context = new SHRContext();
             //StringBuilder sb = new StringBuilder();
-            foreach (Hipaa_XML hipaaclaim in context.Hipaa_XML.Where(x => x.ClaimType == "I"))
+            foreach (Hipaa_XML hipaaclaim in context.Hipaa_XML.Where(x=>x.ClaimType=="I"))
             {
 
                 XDocument xdoc = XDocument.Parse(hipaaclaim.ClaimHipaaXML);
@@ -1956,7 +1956,7 @@ namespace ExportModule
                 }
 
                 XElement AtteProv = loop2300.Descendants(ns + "NM1_SubLoop_4").Descendants(ns + "TS837_2310A_Loop").FirstOrDefault();
-                if (AtteProv != null)
+                if (AtteProv !=null)
                 {
                     provider = new ClaimProvider();
                     provider.ClaimID = hipaaclaim.ClaimID;
@@ -2433,28 +2433,28 @@ namespace ExportModule
             SHRUtil.SaveClaims(ref claims);
             context.Dispose();
         }
-        public static void SubHist_P306()
+        public static async Task SubHist_P306Async()
         {
             List<HipaaXML> hipaaclaims = Utility.GetHipaaXMLForCAPProcedureCode_P();
             List<Hipaa_XML> hipaaxmls = new List<Hipaa_XML>();
-            foreach (HipaaXML hipaaclaim in hipaaclaims) { hipaaxmls.Add(new Hipaa_XML { ClaimType = "P", ClaimID = hipaaclaim.ClaimID, EncounterId = hipaaclaim.EncounterId, ClaimHipaaXML = hipaaclaim.ClaimHipaaXML }); }
+            foreach (HipaaXML hipaaclaim in hipaaclaims) { hipaaxmls.Add(new Hipaa_XML {ClaimType="P", ClaimID = hipaaclaim.ClaimID, EncounterId = hipaaclaim.EncounterId, ClaimHipaaXML = hipaaclaim.ClaimHipaaXML }); }
             using (var context1 = new SHRContext())
             {
                 context1.Hipaa_XML.AddRange(hipaaxmls);
-                context1.SaveChanges();
+                await context1.SaveChangesAsync();
             }
 
         }
 
-        public static void SubHist_I306()
+        public static async Task SubHist_I306Async()
         {
-            List<HipaaXML> hipaaclaims = Utility.GetHipaaXMLForCAP0x001B2_I();
+            List<HipaaXML> hipaaclaims = Utility.GetHipaaXMLForDRGError_I();
             List<Hipaa_XML> hipaaxmls = new List<Hipaa_XML>();
             foreach (HipaaXML hipaaclaim in hipaaclaims) { hipaaxmls.Add(new Hipaa_XML { ClaimType = "I", ClaimID = hipaaclaim.ClaimID, EncounterId = hipaaclaim.EncounterId, ClaimHipaaXML = hipaaclaim.ClaimHipaaXML }); }
             using (var context1 = new SHRContext())
             {
                 context1.Hipaa_XML.AddRange(hipaaxmls);
-                context1.SaveChanges();
+                await context1.SaveChangesAsync();
             }
 
         }

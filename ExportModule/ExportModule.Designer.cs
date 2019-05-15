@@ -101,7 +101,6 @@
             this.toolStripButton1.Size = new System.Drawing.Size(95, 22);
             this.toolStripButton1.Text = "Load Staging(P)";
             this.toolStripButton1.ToolTipText = "Load Staging(P)";
-            this.toolStripButton1.Click += new System.EventHandler(this.toolStripButton1_Click);
             // 
             // toolStripSeparator1
             // 
@@ -116,7 +115,6 @@
             this.toolStripButton2.Size = new System.Drawing.Size(91, 22);
             this.toolStripButton2.Text = "Load Staging(I)";
             this.toolStripButton2.ToolTipText = "Load Staging(I)";
-            this.toolStripButton2.Click += new System.EventHandler(this.toolStripButton2_Click);
             // 
             // toolStripSeparator2
             // 
@@ -131,7 +129,6 @@
             this.toolStripButton3.Size = new System.Drawing.Size(81, 22);
             this.toolStripButton3.Text = "Load WPC(P)";
             this.toolStripButton3.ToolTipText = "Load WPC(P)";
-            this.toolStripButton3.Click += new System.EventHandler(this.toolStripButton3_Click);
             // 
             // toolStripSeparator3
             // 
@@ -146,7 +143,6 @@
             this.toolStripButton8.Size = new System.Drawing.Size(77, 22);
             this.toolStripButton8.Text = "Load WPC(I)";
             this.toolStripButton8.ToolTipText = "Load WPC(I)";
-            this.toolStripButton8.Click += new System.EventHandler(this.toolStripButton8_Click);
             // 
             // toolStripSeparator7
             // 
@@ -160,7 +156,6 @@
             this.toolStripButton4.Name = "toolStripButton4";
             this.toolStripButton4.Size = new System.Drawing.Size(82, 22);
             this.toolStripButton4.Text = "Export(P-305)";
-            this.toolStripButton4.Click += new System.EventHandler(this.toolStripButton4_Click);
             // 
             // toolStripSeparator4
             // 
@@ -174,7 +169,6 @@
             this.toolStripButton5.Name = "toolStripButton5";
             this.toolStripButton5.Size = new System.Drawing.Size(78, 22);
             this.toolStripButton5.Text = "Export(I-305)";
-            this.toolStripButton5.Click += new System.EventHandler(this.toolStripButton5_Click);
             // 
             // toolStripSeparator5
             // 
@@ -188,7 +182,6 @@
             this.toolStripButton6.Name = "toolStripButton6";
             this.toolStripButton6.Size = new System.Drawing.Size(82, 22);
             this.toolStripButton6.Text = "Export(P-306)";
-            this.toolStripButton6.Click += new System.EventHandler(this.toolStripButton6_Click);
             // 
             // toolStripSeparator6
             // 
@@ -202,7 +195,6 @@
             this.toolStripButton7.Name = "toolStripButton7";
             this.toolStripButton7.Size = new System.Drawing.Size(78, 22);
             this.toolStripButton7.Text = "Export(I-306)";
-            this.toolStripButton7.Click += new System.EventHandler(this.toolStripButton7_Click);
             // 
             // toolStripSeparator8
             // 
@@ -216,7 +208,6 @@
             this.toolStripButton9.Name = "toolStripButton9";
             this.toolStripButton9.Size = new System.Drawing.Size(91, 22);
             this.toolStripButton9.Text = "Export TP_Extra";
-            this.toolStripButton9.Click += new System.EventHandler(this.toolStripButton9_Click);
             // 
             // ExportModule
             // 
