@@ -39,15 +39,12 @@ namespace ExportModule.Model.X12Segments
             if (!string.IsNullOrEmpty(ProcedureCode)) sb.Append(":" + ProcedureCode);
             if (!string.IsNullOrEmpty(ProcedureDescription))
             {
-                sb.Append(":");
-                if (!string.IsNullOrEmpty(ProcedureModifier1)) sb.Append(ProcedureModifier1);
-                sb.Append(":");
-                if (!string.IsNullOrEmpty(ProcedureModifier2)) sb.Append(ProcedureModifier2);
-                sb.Append(":");
-                if (!string.IsNullOrEmpty(ProcedureModifier3)) sb.Append(ProcedureModifier3);
-                sb.Append(":");
-                if (!string.IsNullOrEmpty(ProcedureModifier4)) sb.Append(ProcedureModifier4);
-                sb.Append(":" + ProcedureDescription);
+                int delimiterrepeat = 0;
+                if (!string.IsNullOrEmpty(ProcedureModifier1)) { sb.Append(":" + ProcedureModifier1); delimiterrepeat++; }
+                if (!string.IsNullOrEmpty(ProcedureModifier2)) { sb.Append(":" + ProcedureModifier2); delimiterrepeat++; }
+                if (!string.IsNullOrEmpty(ProcedureModifier3)) { sb.Append(":" + ProcedureModifier3); delimiterrepeat++; }
+                if (!string.IsNullOrEmpty(ProcedureModifier4)) { sb.Append(":" + ProcedureModifier4); delimiterrepeat++; }
+                sb.Append(new String(':', 5 - delimiterrepeat) + ProcedureDescription);
             }
             else
             {
